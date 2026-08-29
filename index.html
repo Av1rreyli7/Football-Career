@@ -9,180 +9,272 @@
 <style>
 
 :root{
-  --night:#070906;
-  --panel:#0e120d;
-  --panel2:#161b15;
-  --chalk:#efeee5;
-  --text:#efeee5;
-  --dim:#9aa294;
-  --dim2:#7d857a;
-  --faint:#5d655a;
-  --grass:#57c25e;
-  --gold:#ffb424;
-  --goldhi:#ffd061;
-  --red:#e04b3a;
-  --line:#232922;
-  --line2:#1d221c;
-  --hair:#191e18;
+  --night:#070906; --screen:#0b0e0b; --panel:#0e120d; --panel2:#161b15; --pitchbg:#0f150e;
+  --chalk:#efeee5; --text:#efeee5; --soft:#d8d7cc; --mid:#c9cec2;
+  --dim:#9aa294; --dim2:#7d857a; --faint:#5d655a; --ghost:#3f463c;
+  --grass:#57c25e; --gold:#ffb424; --goldhi:#ffd061; --red:#e04b3a;
+  --line:#232922; --line2:#1d221c; --hair:#191e18; --pline:#2a3527; --bline:#2c332a;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{background:var(--night);color:var(--chalk);font-family:'Barlow',-apple-system,sans-serif;font-size:15px}
 h1,h2,h3,.disp{font-family:'Barlow Condensed',sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:.02em}
 h4{font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-button{font-family:'Barlow Condensed',sans-serif;font-style:italic;text-transform:uppercase;letter-spacing:.06em;background:var(--gold);color:#0b0e0b;border:none;padding:9px 18px;cursor:pointer;font-size:15px;font-weight:800}
+.mlab{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.mlab::before{content:"";width:8px;height:8px;background:var(--gold);flex:none}
+.mlab.plain::before{display:none}
+.msub{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase}
+button{font-family:'Barlow Condensed',sans-serif;font-style:italic;text-transform:uppercase;letter-spacing:.06em;background:var(--gold);color:#0b0e0b;border:none;padding:10px 20px;cursor:pointer;font-size:16px;font-weight:800}
 button:hover{background:var(--goldhi)}
 button:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
-button.ghost{background:transparent;color:var(--dim);border:1px solid var(--line)}
+button.ghost{background:transparent;color:var(--dim);border:1px solid var(--bline);font-style:normal;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;font-weight:500;padding:8px 12px}
 button.ghost:hover{background:var(--panel2);color:var(--chalk)}
-button.gold{background:var(--gold);box-shadow:0 0 0 1px rgba(255,180,36,.35)}
+button.gold{background:var(--gold)}
 button.gold:hover{background:var(--goldhi)}
-button.red{background:transparent;color:var(--red);border:1px solid #5c2b2e}
+button.red{background:transparent;color:var(--red);border:1px solid #5c2b2e;font-style:normal;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;font-weight:500;padding:8px 12px}
 button.red:hover{background:rgba(224,75,58,.12)}
-button.small{padding:5px 11px;font-size:12.5px}
+button.small{padding:5px 10px;font-size:12px}
+button.small.ghost,button.small.red{padding:4px 8px;font-size:9px}
 input,select{background:var(--panel2);border:1px solid var(--line);color:var(--chalk);padding:9px 10px;font-size:14px;font-family:'Barlow',sans-serif}
-select{text-transform:none}
 input:focus,select:focus{outline:2px solid var(--gold);outline-offset:-1px}
-.wrap{max-width:1100px;margin:0 auto;padding:18px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 0 18px}
 .hidden{display:none!important}
 .mono{font-family:'IBM Plex Mono',monospace}
 
-/* lobby */
-#lobby{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:20px;
-background:
- repeating-linear-gradient(90deg, transparent 0 119px, rgba(239,238,229,.02) 119px 240px),
- radial-gradient(ellipse at 50% -10%, #141a12 0%, var(--night) 62%)}
-#lobby h1{font-size:clamp(44px,9vw,84px);line-height:.92;text-align:center;font-style:italic}
+/* ---------- lobby ---------- */
+#lobby{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:20px;background:var(--night)}
+#lobby h1{font-size:clamp(46px,9vw,88px);line-height:.9;text-align:center;font-style:italic;display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center}
+#lobby h1::before{content:"";width:clamp(16px,2.4vw,24px);height:clamp(16px,2.4vw,24px);background:var(--gold)}
 #lobby h1 span{color:var(--gold)}
-#lobby .sub{color:var(--dim);text-align:center;max-width:520px;font-size:14.5px}
-.card{background:#0b0e0b;border:1px solid var(--line2);padding:22px;width:min(420px,94vw)}
+#lobby .sub{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;color:var(--dim2);text-align:center;max-width:640px;line-height:1.9}
+.card{background:var(--screen);border:1px solid var(--line2);padding:24px;width:min(440px,94vw)}
+.card h3{font-size:22px;font-style:italic}
 .card .row{display:flex;gap:8px;margin-top:10px}
-.card input{flex:1;font-family:'IBM Plex Mono',monospace;letter-spacing:.12em}
+.card input{flex:1;font-family:'IBM Plex Mono',monospace;letter-spacing:.14em}
 
-/* ticker */
-.ticker{background:#0b0e0b;border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap}
-.ticker-inner{display:inline-block;padding:8px 0;animation:tick 40s linear infinite;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;color:var(--gold)}
-@keyframes tick{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
-@media (prefers-reduced-motion: reduce){.ticker-inner{animation:none;padding-left:12px}}
+/* lobby room: code + managers */
+.lobbygrid{display:grid;grid-template-columns:1fr 380px;border:1px solid var(--line2);background:var(--screen);width:min(1100px,96vw)}
+.lobbyleft{padding:44px 48px;border-right:1px solid var(--line)}
+.codeboxes{display:flex;gap:12px;margin:16px 0 26px}
+.codebox{width:min(96px,20vw);aspect-ratio:4/5;border:1px solid var(--bline);display:grid;place-items:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(44px,9vw,72px);color:var(--gold)}
+.lobbyright{padding:32px 28px}
+.mgrow{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:6px;padding:12px 0;border-bottom:1px solid var(--hair)}
+.mgrow .n{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint)}
+.mgrow .nm{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:21px}
+.mgrow .cl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--dim2);margin-top:2px;text-transform:uppercase}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--grass);animation:flpulse 1.6s infinite;display:inline-block}
+.pulse.red{background:var(--red)}
+@keyframes flpulse{0%,100%{opacity:1}50%{opacity:.25}}
+@media (prefers-reduced-motion: reduce){.pulse{animation:none}.ticker-inner{animation:none;padding-left:12px}#matchday .waiting{animation:none}}
 
-/* header */
-header.bar{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
-header.bar h2{font-size:24px;font-style:italic;display:flex;align-items:center;gap:10px}
-header.bar h2::before{content:"";width:13px;height:13px;background:var(--gold);display:inline-block;flex:none}
+/* ---------- top bar ---------- */
+.topbar{display:flex;align-items:stretch;border:1px solid var(--line2);border-bottom:1px solid var(--line);background:var(--screen);min-height:54px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;padding:10px 20px;border-right:1px solid var(--line)}
+.brand .sq{width:13px;height:13px;background:var(--gold);flex:none}
+.brand .nm{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-style:italic;font-size:24px;letter-spacing:.04em}
+.brand .tg{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.22em;color:var(--dim2);padding-top:3px}
+.worldstrip{flex:1;display:flex;align-items:center;gap:22px;padding:10px 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:var(--dim);flex-wrap:wrap;text-transform:uppercase}
+.worldstrip .lit{color:var(--chalk)}
+.worldstrip .lit span{color:var(--gold)}
+.baright{display:flex;align-items:center;gap:16px;padding:10px 20px;border-left:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:var(--dim);flex-wrap:wrap}
+.codechip{color:var(--chalk);background:var(--panel2);padding:4px 8px;letter-spacing:.3em;margin-left:6px}
+header.bar{display:none}
 .badge{background:var(--panel2);border:1px solid var(--line);padding:5px 10px;font-size:11px;color:var(--dim2);font-family:'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase}
 .badge b{color:var(--chalk);letter-spacing:.18em}
 .budget{color:var(--grass);font-family:'IBM Plex Mono',monospace;font-weight:600}
 
-nav.tabs{display:flex;flex-wrap:wrap;gap:0;margin:14px 0;border-bottom:1px solid var(--line)}
-nav.tabs button{background:transparent;color:var(--dim2);border:none;border-bottom:2px solid transparent;font-style:normal;font-weight:700;font-size:14.5px;letter-spacing:.08em;padding:9px 13px}
+/* ---------- club hub head ---------- */
+.hubhead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:24px 22px 18px;border:1px solid var(--line2);border-top:none;background:var(--screen);flex-wrap:wrap}
+.hubhead .who{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.22em;color:var(--dim2);margin-bottom:6px;text-transform:uppercase}
+.hubhead .clubname{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(40px,7vw,68px);line-height:.9;letter-spacing:.01em;text-transform:uppercase}
+.statrow{display:flex;flex-wrap:wrap}
+.statblk{padding:0 22px;border-left:1px solid var(--line)}
+.statblk .k{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.18em;color:var(--dim2);text-transform:uppercase}
+.statblk .v{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:32px;line-height:1.1}
+.statblk .v.gold{color:var(--gold)}
+.statblk .v.green{color:var(--grass)}
+.statblk .v.red{color:var(--red)}
+
+/* ---------- tabs ---------- */
+nav.tabs{display:flex;flex-wrap:wrap;gap:0;margin:0 0 14px;border:1px solid var(--line2);border-top:none;background:var(--screen);overflow-x:auto}
+nav.tabs button{background:transparent;color:var(--dim2);border:none;border-right:1px solid var(--hair);border-bottom:2px solid transparent;font-style:normal;font-weight:700;font-size:15px;letter-spacing:.05em;padding:12px 15px;white-space:nowrap}
 nav.tabs button:hover{background:transparent;color:var(--chalk)}
 nav.tabs button.on{background:transparent;color:var(--gold);border-bottom:2px solid var(--gold)}
 
-.panel{background:var(--panel);border:1px solid var(--line2);padding:16px;margin-bottom:14px}
+.panel{background:var(--screen);border:1px solid var(--line2);padding:18px 20px;margin-bottom:14px}
 table{width:100%;border-collapse:collapse}
-th{font-family:'IBM Plex Mono',monospace;text-transform:uppercase;font-size:10px;letter-spacing:.16em;color:var(--faint);text-align:left;padding:8px;border-bottom:1px solid var(--line)}
-td{padding:7px 8px;border-bottom:1px solid var(--hair);font-size:14px}
+th{font-family:'IBM Plex Mono',monospace;text-transform:uppercase;font-size:10px;letter-spacing:.14em;color:var(--faint);text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid var(--hair);font-size:14px}
+td:first-child{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16px;letter-spacing:.02em}
 tr.me td{background:rgba(255,180,36,.06)}
-.num{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px}
+.num{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12.5px}
 .pos-GK{color:var(--gold)}.pos-DF{color:#7fb2d9}.pos-MF{color:#a8d97f}.pos-FW{color:#e08b7a}
-.tag{font-size:9px;padding:3px 8px;border:1px solid var(--line);color:var(--dim2);font-family:'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase}
+.tag{font-size:9px;padding:3px 8px;border:1px solid #4a5246;color:var(--mid);font-family:'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase}
 .tag.human{border-color:var(--gold);color:var(--gold)}
 .tag.listed{border-color:var(--red);color:var(--red)}
-.msg{color:var(--gold);min-height:18px;font-size:13px;margin-top:8px}
-.feed p{padding:7px 0;border-bottom:1px solid var(--hair);font-size:13px;color:var(--dim)}
+.msg{color:var(--gold);min-height:18px;font-size:13px;margin-top:8px;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em}
+.feed p{padding:8px 0;border-bottom:1px solid var(--hair);font-size:13.5px;color:var(--dim);line-height:1.5}
 .feed p b{color:var(--chalk)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:760px){.grid2{grid-template-columns:1fr}}
-.offer{border:1px solid var(--line);background:var(--panel2);padding:12px;margin-bottom:10px}
-.offer .who{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;letter-spacing:.02em}
-.offer .note{color:var(--dim);font-size:13px;margin:4px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+
+/* ---------- offers as negotiation cards ---------- */
+.offer{border:1px solid var(--line);background:var(--screen);padding:0;margin-bottom:12px}
+.offer .ohead{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--hair);flex-wrap:wrap}
+.offer .who{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase}
+.offer .fee{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:27px;padding:8px 16px 2px}
+.offer .fee small{font-size:14px;color:var(--dim2);font-weight:600;letter-spacing:.06em;margin-left:8px;text-transform:uppercase}
+.offer .note{color:var(--dim);font-size:13.5px;margin:2px 16px 10px;line-height:1.45}
+.offer .oact{display:flex;gap:8px;padding:0 16px 13px;flex-wrap:wrap;align-items:center}
 .status-accepted{color:var(--grass)}.status-declined,.status-failed,.status-player_declined,.status-void{color:var(--red)}
 .status-countered,.status-pending_seller{color:var(--gold)}
-.fixture{display:flex;justify-content:space-between;padding:7px 8px;border-bottom:1px solid var(--hair);font-size:14px}
-.fixture .score{font-family:'IBM Plex Mono',monospace;color:var(--gold)}
+
+.fixture{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--hair);font-size:15px}
+.fixture .fh{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16.5px;text-align:right}
+.fixture .fa{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16.5px}
+.fixture .score{font-family:'IBM Plex Mono',monospace;color:var(--gold);font-weight:600;font-size:13px}
+.fixture.mine{background:rgba(255,180,36,.06)}
+
 .teampick{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px}
-.teampick button{background:var(--panel2);color:var(--chalk);border:1px solid var(--line);padding:12px 8px;font-size:14px;font-style:normal;letter-spacing:.04em}
+.teampick button{background:var(--panel2);color:var(--chalk);border:1px solid var(--line);padding:12px 8px;font-size:15px;font-style:normal;letter-spacing:.03em;font-weight:700}
 .teampick button:hover{background:#1c231b;border-color:var(--dim2)}
 .teampick button.taken{opacity:.35;cursor:not-allowed}
 .teampick button.mine{border-color:var(--gold);color:var(--gold)}
 .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
 
-/* lineup */
+/* ---------- lineup: formation rail, full pitch, bench ---------- */
+.lugrid{display:grid;grid-template-columns:220px 1fr 300px;gap:0;border:1px solid var(--line2);background:var(--screen)}
+@media(max-width:980px){.lugrid{grid-template-columns:1fr}.furail{display:flex;overflow-x:auto;border-right:none!important;border-bottom:1px solid var(--line)}.furow{border-top:none!important;border-right:1px solid var(--hair);flex:none}}
+.furail{border-right:1px solid var(--line);padding:14px 0}
+.furail .mlab{padding:0 18px 10px}
+.furow{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:11px 18px;border-top:1px solid var(--hair);cursor:pointer}
+.furow:hover{background:#12160f}
+.furow .fn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:19px;color:var(--dim)}
+.furow.on{background:rgba(255,180,36,.06)}
+.furow.on .fn{color:var(--gold)}
+.furow .ft{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase}
+.pitchwrap{display:grid;place-items:center;padding:22px 10px;background:#0d110c;border-right:1px solid var(--line)}
+@media(max-width:980px){.pitchwrap{border-right:none;border-bottom:1px solid var(--line)}}
+#pitch{position:relative;width:100%;max-width:400px;aspect-ratio:10/13;border:1px solid var(--pline);background:var(--pitchbg)}
+#pitch::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--pline)}
+#pitch::after{content:"";position:absolute;left:50%;top:50%;width:26%;aspect-ratio:1;border:1px solid var(--pline);border-radius:50%;transform:translate(-50%,-50%)}
+.pbox{position:absolute;left:50%;width:52%;height:12%;border:1px solid var(--pline);transform:translateX(-50%);pointer-events:none}
+.pbox.top{top:0;border-top:none}
+.pbox.bot{bottom:0;border-bottom:none}
+.luslot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;user-select:none}
+.luball{width:42px;height:42px;border-radius:50%;background:rgba(7,9,6,.6);border:1px dashed rgba(239,238,229,.35);color:var(--dim);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;position:relative}
+.luslot.lufilled .luball{background:var(--panel2);border:1px solid var(--pline);color:var(--chalk)}
+.luslot.lufilled.gk .luball{color:var(--gold)}
+.luslot.luSel .luball{background:var(--gold);color:#0b0e0b;border-color:var(--gold);box-shadow:0 0 12px rgba(255,180,36,.5)}
+.luplate{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13.5px;letter-spacing:.03em;background:var(--screen);padding:1px 8px;max-width:88px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.luslot:not(.lufilled) .luplate{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.16em;color:var(--faint)}
+.luage{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--dim2);letter-spacing:.08em}
+.luX{position:absolute;top:-6px;right:-6px;width:16px;height:16px;line-height:14px;border-radius:50%;background:var(--red);color:#fff;font-size:10px;cursor:pointer;text-align:center}
+.lucount{position:absolute;top:8px;right:10px;background:rgba(7,9,6,.7);padding:2px 9px;color:var(--gold);font-weight:600;font-size:11px;font-family:'IBM Plex Mono',monospace;letter-spacing:.1em}
+.benchcol{padding:14px 0}
+.benchcol .mlab{padding:0 18px 8px}
+.benchrow{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:8px;padding:8px 18px;border-top:1px solid var(--hair)}
+.benchrow.sel{background:rgba(255,180,36,.07)}
+.benchrow .bp{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint)}
+.benchrow .bn{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16.5px;cursor:pointer;display:flex;align-items:baseline;gap:8px;min-width:0}
+.benchrow .bn span{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim2);flex:none}
+.benchrow .bn b{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--gold);font-weight:600;flex:none}
+.benchrow .ba{display:flex;gap:5px}
+.dragghint{margin:14px 18px 4px;border:1px dashed var(--bline);padding:11px 14px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;line-height:1.8}
+.luhead{font-family:'IBM Plex Mono',monospace;text-transform:uppercase;font-size:11px;letter-spacing:.2em;color:var(--dim2);margin:12px 0 4px}
+.luhead b{color:var(--chalk)}
+.chiprow{display:flex;flex-wrap:wrap;gap:7px;margin:6px 0 12px}
+.pchip{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);padding:5px 10px;font-size:13.5px;cursor:pointer;position:relative}
+.pchip:hover{border-color:var(--dim2)}
+.pchip.luSel{border-color:var(--gold);box-shadow:0 0 8px rgba(255,180,36,.4)}
+.pmeta{color:var(--gold);font-weight:600;font-size:11px;font-family:'IBM Plex Mono',monospace}
 .lurow{display:flex;align-items:center;gap:8px;padding:5px 8px;border-bottom:1px solid var(--hair);font-size:14px}
 .lurow .luname{flex:1}
 .lurow .lumeta{color:var(--dim);font-family:'IBM Plex Mono',monospace;font-size:12px}
-.luhead{font-family:'IBM Plex Mono',monospace;text-transform:uppercase;font-size:11px;letter-spacing:.2em;color:var(--dim2);margin:12px 0 4px}
-.luhead b{color:var(--chalk)}
 
-/* cups */
-.cup{border:1px solid var(--line);background:var(--panel2);padding:14px;margin-bottom:14px}
-.cup h3{font-size:19px}
-.cup .cupsub{color:var(--dim);font-size:13px;margin:4px 0 8px}
+/* ---------- cups ---------- */
+.cup{border:1px solid var(--line);background:var(--screen);padding:14px 16px;margin-bottom:14px}
+.cup h3{font-size:20px}
+.cup .cupsub{color:var(--dim2);font-size:11px;margin:4px 0 8px;font-family:'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase}
 .cup .champ{color:var(--gold)}
 .cuproundname{font-family:'IBM Plex Mono',monospace;text-transform:uppercase;font-size:10px;letter-spacing:.2em;color:var(--faint);margin:12px 0 3px}
-.fixture.mine{background:rgba(255,180,36,.06)}
-
-/* transfer window badge */
 .win-open{color:var(--grass)}
 .win-shut{color:var(--red)}
 
-/* matchday lock overlay */
-#matchday{position:fixed;inset:0;z-index:50;background:
- repeating-linear-gradient(90deg, transparent 0 119px, rgba(239,238,229,.018) 119px 240px),
- radial-gradient(ellipse at 50% -10%, #141a12 0%, var(--night) 62%);
- overflow:auto;padding:26px 16px}
-#matchday .inner{max-width:760px;margin:0 auto}
-#matchday h2{font-size:clamp(28px,5vw,44px);text-align:center;font-style:italic}
-#matchday h2 span{color:var(--gold)}
-#matchday .sub{text-align:center;color:var(--dim);margin:6px 0 18px;font-size:14px}
-#matchday .panel{background:rgba(11,14,11,.92)}
-#matchday .foot{display:flex;justify-content:center;gap:10px;margin:18px 0 40px;flex-wrap:wrap}
-#matchday .waiting{color:var(--gold);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.24em;font-size:12px;animation:pulse 1.6s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
-@media (prefers-reduced-motion: reduce){#matchday .waiting{animation:none}}
+/* ---------- calendar grid ---------- */
+.calgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));border-left:1px solid var(--hair);border-top:1px solid var(--hair)}
+.calcell{border-right:1px solid var(--hair);border-bottom:1px solid var(--hair);padding:10px 11px 12px;min-height:92px}
+.calcell.now{background:rgba(255,180,36,.07)}
+.calcell.done{opacity:.6}
+.calcell .ctop{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.calcell .cmw{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;color:var(--faint)}
+.calcell.now .cmw{color:var(--gold)}
+.calcell .ccomp{font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:.12em;color:var(--dim2);text-transform:uppercase;text-align:right}
+.calcell .copp{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:14.5px;line-height:1.15;margin-top:7px}
+.calcell .cres{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;margin-top:5px}
+.calcell .cres.w{color:var(--grass)}.calcell .cres.l{color:var(--red)}.calcell .cres.d{color:var(--dim)}
+.calcell .cwin{font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:.1em;color:var(--gold);margin-top:5px;text-transform:uppercase}
+.calcell .cextra{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.08em;color:var(--dim2);margin-top:4px;line-height:1.6;text-transform:uppercase}
+.callegend{display:flex;gap:18px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--dim2);flex-wrap:wrap;text-transform:uppercase}
+.calweek{display:none}
 
-    .calweek{display:flex;gap:10px;padding:7px 10px;border-bottom:1px solid var(--hair);align-items:flex-start}
-    .calweek.done{opacity:.55}
-    .calweek.now{background:rgba(255,180,36,.07);border-left:3px solid var(--gold)}
-    .calw{min-width:52px;color:var(--faint);font-weight:600;font-size:11px;font-family:'IBM Plex Mono',monospace;letter-spacing:.1em;padding-top:2px}
-    .calbits{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px}
-    .calbits .calmine{color:var(--gold);font-weight:600}
-    .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
-    #pitch{position:relative;width:100%;max-width:430px;margin:0 auto;aspect-ratio:10/12;border-radius:0;border:1px solid var(--line);
-      background:repeating-linear-gradient(0deg,#0d1f10 0 12.5%,#102515 12.5% 25%);overflow:hidden}
-    #pitch::before{content:"";position:absolute;inset:0;
-      background:radial-gradient(circle at 50% 50%,transparent 62px,rgba(239,238,229,.12) 62px,rgba(239,238,229,.12) 64px,transparent 64px),
-      linear-gradient(rgba(239,238,229,.12),rgba(239,238,229,.12));background-size:100% 100%,100% 2px;background-repeat:no-repeat;background-position:center,center}
-    .luslot{position:absolute;transform:translate(-50%,-50%);min-width:50px;max-width:76px;padding:4px 6px;border-radius:0;text-align:center;
-      background:rgba(7,9,6,.55);border:1px dashed rgba(239,238,229,.3);color:#c9cec2;font-size:12px;cursor:pointer;user-select:none}
-    .luslot.lufilled{background:var(--panel2,#161b15);border:1px solid var(--gold);color:var(--text,#efeee5)}
-    .luslot.luSel{outline:2px solid var(--gold);box-shadow:0 0 10px rgba(255,180,36,.5)}
-    .luchipname{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .luchiprat{color:var(--gold);font-size:9.5px;font-weight:600;font-family:'IBM Plex Mono',monospace}
-    .luplus{display:block;font-size:16px;opacity:.8}
-    .lulabel{font-size:9px;letter-spacing:.18em;opacity:.75;font-family:'IBM Plex Mono',monospace}
-    .luX{position:absolute;top:-7px;right:-7px;width:17px;height:17px;line-height:15px;border-radius:50%;background:var(--red,#e04b3a);color:#fff;font-size:11px;cursor:pointer;text-align:center}
-    .lucount{position:absolute;top:8px;right:10px;background:rgba(7,9,6,.6);padding:2px 9px;border-radius:0;color:var(--gold);font-weight:600;font-size:11px;font-family:'IBM Plex Mono',monospace;letter-spacing:.1em}
-    .chiprow{display:flex;flex-wrap:wrap;gap:7px;margin:6px 0 12px}
-    .pchip{display:flex;align-items:center;gap:6px;background:var(--panel2,#161b15);border:1px solid var(--line);border-radius:0;padding:5px 10px;font-size:13.5px;cursor:pointer;position:relative}
-    .pchip:hover{border-color:var(--dim2)}
-    .pchip.luSel{border-color:var(--gold);box-shadow:0 0 8px rgba(255,180,36,.4)}
-    .pmeta{color:var(--gold);font-weight:600;font-size:11px;font-family:'IBM Plex Mono',monospace}
-    .fabpost{border:1px solid var(--line);border-radius:0;padding:11px 13px;margin-bottom:9px;background:var(--panel,#0e120d)}
-    .fabhead{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap}
-    .fabav{width:30px;height:30px;border-radius:50%;background:#1d9bf0;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;font-family:'Barlow Condensed',sans-serif}
-    .fabname{font-weight:700}
-    .fabtick{color:#1d9bf0;font-size:13px}
-    .fabhandle{color:var(--faint);font-size:11.5px;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em}
-    .fabtext{font-size:14px;line-height:1.45}
-    .awardh{margin:0 0 6px;color:var(--gold);font-size:12px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.18em}
+/* ---------- romano wire ---------- */
+.fabpost{border-bottom:1px solid var(--hair);padding:15px 4px}
+.fabpost.hero{background:rgba(255,180,36,.05);padding:16px 14px}
+.fabhead{display:flex;gap:12px;align-items:baseline;margin-bottom:8px}
+.fabtime{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint)}
+.fabbadge{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-style:italic;font-size:13px;letter-spacing:.1em;padding:2px 9px;text-transform:uppercase}
+.fabbadge.go{background:var(--gold);color:#0b0e0b}
+.fabbadge.off{background:var(--red);color:#0b0e0b}
+.fabbadge.info{border:1px solid #4a5246;color:var(--mid)}
+.fabtext{font-size:15px;line-height:1.45;color:var(--soft)}
+.fabpost.hero .fabtext{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:23px;line-height:1.12;color:var(--chalk)}
+.fabav,.fabname,.fabtick,.fabhandle{display:none}
+
+/* ---------- awards ---------- */
+.awardh{margin:0 0 6px;color:var(--gold);font-size:11px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.18em}
+
+
+/* ---------- nations ---------- */
+.teamcard{border:1px solid var(--line);background:var(--panel2);padding:13px 15px}
+.teamcard.me{border-color:var(--gold)}
+.tc-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;letter-spacing:.02em;text-transform:uppercase}
+.tc-sub{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--dim2);margin-top:3px;text-transform:uppercase}
+
+/* ---------- matchday ---------- */
+#matchday{position:fixed;inset:0;z-index:50;background:var(--night);overflow:auto;padding:0}
+#matchday .inner{max-width:1000px;margin:0 auto;border-left:1px solid var(--line2);border-right:1px solid var(--line2);min-height:100vh;background:var(--screen)}
+.mdtop{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#matchday h2{font-size:clamp(26px,5vw,36px);font-style:italic}
+#matchday h2 span{color:var(--gold)}
+#matchday .sub{color:var(--dim2);font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;padding:10px 24px;border-bottom:1px solid var(--hair);line-height:1.9}
+.mdlock{display:flex;align-items:center;gap:9px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;color:var(--red);text-transform:uppercase}
+.mdhero{display:flex;align-items:center;justify-content:center;gap:clamp(14px,4vw,44px);padding:30px 12px;border-bottom:1px solid var(--line);background:rgba(255,180,36,.04);flex-wrap:wrap}
+.mdhero .tm{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(24px,4.6vw,46px);line-height:1;text-transform:uppercase}
+.mdhero .tm.away{color:var(--dim)}
+.mdhero .sc{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(46px,8vw,80px);color:var(--gold)}
+.mdhero .sc.away{color:var(--dim)}
+.mdhero .dash{font-family:'IBM Plex Mono',monospace;color:var(--faint);font-size:15px}
+#matchday .panel{border:none;border-bottom:1px solid var(--line);margin:0;background:transparent}
+#matchday .foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 24px 40px;flex-wrap:wrap}
+#matchday .waiting{color:var(--gold);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.24em;font-size:11px;animation:flpulse 1.6s ease-in-out infinite}
+
+/* ---------- ticker ---------- */
+.ticker{display:flex;background:var(--screen);border:1px solid var(--line2);border-top:1px solid var(--line);overflow:hidden;white-space:nowrap;align-items:stretch;height:40px;margin-bottom:14px}
+.ticker::before{content:"TRANSFER WIRE";display:flex;align-items:center;padding:0 15px;background:var(--gold);color:#0b0e0b;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-style:italic;font-size:15px;letter-spacing:.08em;flex:none}
+.ticker-inner{display:inline-flex;align-items:center;padding:0;animation:tick 40s linear infinite;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+@keyframes tick{from{transform:translateX(60vw)}to{transform:translateX(-100%)}}
+
+@media(max-width:900px){.lobbygrid{grid-template-columns:1fr}.lobbyleft{border-right:none;border-bottom:1px solid var(--line);padding:26px 22px}.lobbyright{padding:20px 22px}.statblk{border-left:none;padding:0 14px 0 0}.hubhead{padding:18px 16px 14px}}
 </style>
 </head>
 <body>
 
 <div id="lobby">
-  <h1>Flood<span>lights</span><br>Career Mode</h1>
-  <p class="sub">Pick a Premier League club with your mates, sign anyone on the planet, haggle with each other, and sim a full 38 game season. Unpicked clubs are run by the AI.</p>
+  <h1>Flood<span>lights</span></h1>
+  <p class="msub" style="letter-spacing:.3em;margin-top:-10px">World career mode</p>
+  <p class="sub">3,900 players &middot; 250 clubs &middot; 15 leagues &middot; one world. Pick a club with your mates, sign anyone on the planet, haggle with each other, and sim a full 38 game season. Unpicked clubs are run by the AI.</p>
   <div class="card">
     <h3>Your manager name</h3>
     <div class="row"><input id="nameIn" maxlength="20" placeholder="e.g. Fergie2"></div>
@@ -196,26 +288,52 @@ tr.me td{background:rgba(255,180,36,.06)}
 <div id="app" class="hidden">
   <div class="ticker"><div class="ticker-inner" id="ticker">Welcome to the league.</div></div>
   <div class="wrap">
-    <header class="bar">
-      <h2 id="hTeam">No club yet</h2>
-      <span class="badge">Game <b id="hCode" class="mono"></b></span>
-      <span class="badge">Season <b id="hSeason"></b> · Week <b id="hRound"></b>/38</span>
-      <span class="badge">Budget <span class="budget" id="hBudget">£0m</span></span>
-      <span class="badge" id="hWindow">Window</span>
-      <span class="badge" id="hMe"></span>
-      <button id="leaveBtn" class="ghost small" style="margin-left:auto">&larr; Back to lobby</button>
-    </header>
-
-    <div id="preStart" class="panel">
-      <h3>Pick your club</h3>
-      <p style="color:var(--dim);font-size:13px;margin-top:4px">One club per manager, from any of the 15 playable leagues. Budgets are set to something like real life, so City money is City money and Dundee money is Dundee money.</p>
-      <div class="controls" style="margin-top:10px"><label style="color:var(--dim);font-size:13px">League</label><select id="pickLeague"></select></div>
-      <div class="teampick" id="teamPick"></div>
-      <div class="controls" style="margin-top:14px">
-        <button id="startBtn" class="gold hidden">Start the season (host)</button>
-        <span id="lobbyList" style="color:var(--dim);font-size:13px"></span>
+    <div class="topbar">
+      <div class="brand"><span class="sq"></span><span class="nm">FLOODLIGHTS</span><span class="tg">WORLD CAREER MODE</span></div>
+      <div class="worldstrip">
+        <span>SEASON <b id="hSeason" style="color:var(--chalk);font-weight:600"></b></span>
+        <span class="lit">MATCHWEEK <b id="hRound"></b><span>/38</span></span>
+        <span id="hWindow"></span>
       </div>
-      <div class="msg" id="pickMsg"></div>
+      <div class="baright">
+        <span>LOBBY<b id="hCode" class="codechip mono"></b></span>
+        <span style="display:flex;align-items:center;gap:7px"><span class="pulse"></span><span id="hLive">LIVE</span></span>
+        <span id="hMe" style="color:var(--faint)"></span>
+        <button id="leaveBtn" class="ghost small">Leave</button>
+      </div>
+    </div>
+    <div class="hubhead">
+      <div>
+        <div class="who" id="hubWho">YOUR CLUB</div>
+        <div class="clubname" id="hTeam">No club yet</div>
+      </div>
+      <div class="statrow">
+        <div class="statblk"><div class="k">Budget</div><div class="v green" id="hBudget">£0m</div></div>
+        <div class="statblk"><div class="k">Position</div><div class="v" id="stPos">-</div></div>
+        <div class="statblk"><div class="k">Points</div><div class="v" id="stPts">-</div></div>
+        <div class="statblk"><div class="k">Squad</div><div class="v gold" id="stSquad">-</div></div>
+      </div>
+    </div>
+
+    <div id="preStart" class="panel" style="padding:0;border-top:none">
+      <div class="lobbygrid" style="width:100%;border:none">
+        <div class="lobbyleft">
+          <div class="msub" style="letter-spacing:.3em;color:var(--dim);margin-bottom:4px">YOUR WORLD IS READY. SHARE THE CODE.</div>
+          <div class="codeboxes" id="codeBoxes"></div>
+          <div class="controls"><button id="startBtn" class="gold hidden">Start world &rarr;</button><span class="msub">HOST CONTROLS TIME</span></div>
+          <div class="msg" id="pickMsg"></div>
+        </div>
+        <div class="lobbyright">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:6px"><span class="pulse"></span><span class="msub" id="mgrCount" style="color:var(--dim);letter-spacing:.24em">MANAGERS</span></div>
+          <div id="lobbyList"></div>
+        </div>
+      </div>
+      <div style="padding:18px 22px;border-top:1px solid var(--line)">
+        <div class="mlab">PICK YOUR CLUB</div>
+        <p style="color:var(--dim2);font-size:13.5px;margin-top:8px">One club per manager, from any of the 15 playable leagues. Budgets are set to something like real life, so City money is City money and Dundee money is Dundee money.</p>
+        <div class="controls" style="margin-top:10px"><label class="msub">LEAGUE</label><select id="pickLeague"></select></div>
+        <div class="teampick" id="teamPick"></div>
+      </div>
     </div>
 
     <nav class="tabs" id="tabs">
@@ -258,23 +376,30 @@ tr.me td{background:rgba(255,180,36,.06)}
       <p style="color:var(--dim);font-size:12px;margin-top:10px">Transfer list a player to attract bids from abroad. You need at least 13 players to sell anyone.</p>
     </section>
 
-    <section id="tab-lineup" class="panel hidden">
-      <div class="controls">
-        <h3 style="margin-right:auto">Lineup</h3>
-        <select id="formSel">
-          <option>4-3-3</option><option>4-4-2</option><option>4-2-3-1</option>
-          <option>3-5-2</option><option>5-3-2</option><option>4-1-4-1</option><option>3-4-3</option>
-        </select>
-        <button id="autoPick" class="ghost small">Auto pick</button>
-        <button id="saveLineup" class="small">Save lineup</button>
+    <section id="tab-lineup" class="hidden">
+      <div class="lugrid">
+        <div class="furail">
+          <div class="mlab">FORMATION</div>
+          <div id="formList"></div>
+          <select id="formSel" class="hidden">
+            <option>4-3-3</option><option>4-4-2</option><option>4-2-3-1</option>
+            <option>3-5-2</option><option>5-3-2</option><option>4-1-4-1</option><option>3-4-3</option>
+          </select>
+          <div style="padding:14px 18px;display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--hair);margin-top:8px">
+            <button id="autoPick" class="ghost small">AUTO PICK XI</button>
+            <button id="saveLineup" class="small">Save lineup</button>
+            <div class="msg" id="lineupMsg" style="margin-top:2px"></div>
+          </div>
+        </div>
+        <div class="pitchwrap"><div id="pitch"></div></div>
+        <div class="benchcol">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding-right:18px"><div class="mlab">BENCH &amp; RESERVES</div><span class="msub" id="subCountWrap">SUBS <b id="subCount" style="color:var(--gold)">0/9</b></span></div>
+          <div id="subList"></div>
+          <div class="mlab plain" style="padding:12px 18px 4px;color:var(--faint)">AVAILABLE</div>
+          <div id="poolList"></div>
+          <div class="dragghint">DRAG A PLAYER ONTO THE PITCH, HIT START FOR A FITTING SPOT, OR TAP PLAYER THEN SPOT. X SENDS HIM BACK. 1 GK &middot; 11 STARTERS &middot; 9 SUBS.</div>
+        </div>
       </div>
-      <p style="color:var(--dim);font-size:12px">Hit Start on a player to drop him straight into a fitting spot, or drag him onto the pitch, or tap the player then tap a spot. Tap the x on a filled spot to send him back. One keeper in goal, 11 total, up to 9 subs.</p>
-      <div id="pitch"></div>
-      <div class="luhead" style="margin-top:10px">Subs <b id="subCount">0/9</b> <span style="color:var(--dim);font-weight:400;font-size:12px">(use the Sub button on a player below)</span></div>
-      <div id="subList" class="chiprow"></div>
-      <div class="luhead">Available players</div>
-      <div id="poolList" class="chiprow"></div>
-      <div class="msg" id="lineupMsg"></div>
     </section>
 
     <section id="tab-romano" class="panel hidden">
@@ -342,9 +467,12 @@ tr.me td{background:rgba(255,180,36,.06)}
     </section>
 
     <section id="tab-calendar" class="panel hidden">
-      <h3>Season calendar</h3>
-      <p style="color:var(--dim);font-size:12px;margin-top:4px">Every week of the season for your club: league games, cup ties, transfer windows and international rounds. Cup opponents show up once the draw for that round is made.</p>
-      <div id="calBox" style="margin-top:10px"></div>
+      <div class="controls">
+        <h3 style="margin-right:auto;font-style:italic">Season calendar</h3>
+        <div class="callegend"><span style="color:var(--gold)">&#9632; CUP / EUROPE</span><span style="color:var(--grass)">&#9632; WIN</span><span style="color:var(--red)">&#9632; LOSS</span><span style="color:var(--dim)">&#9632; DRAW</span></div>
+      </div>
+      <p style="color:var(--dim2);font-size:12.5px;margin:2px 0 10px">Every week of the season for your club: league games, cup ties, transfer windows and international rounds. Cup opponents show up once the draw for that round is made.</p>
+      <div id="calBox" class="calgrid"></div>
     </section>
 
     <section id="tab-academy" class="panel hidden">
@@ -370,10 +498,14 @@ tr.me td{background:rgba(255,180,36,.06)}
 
   <div id="matchday" class="hidden">
     <div class="inner">
-      <h2>Matchweek <span id="mdWeek"></span> <span style="color:var(--chalk)">results</span></h2>
+      <div class="mdtop">
+        <h2>MATCHWEEK <span id="mdWeek"></span></h2>
+        <div class="mdlock"><span class="pulse red"></span><span>LOCKED &middot; FULL TIME EVERYWHERE</span></div>
+      </div>
+      <div class="mdhero hidden" id="mdHero"></div>
       <p class="sub" id="mdSub"></p>
-      <div class="panel"><h3 style="font-size:14px;color:var(--dim);margin-bottom:6px">Premier League</h3><div id="mdLeague"></div></div>
-      <div class="panel hidden" id="mdCupsPanel"><h3 style="font-size:14px;color:var(--dim);margin-bottom:6px">Cup action</h3><div id="mdCups"></div></div>
+      <div class="panel"><div class="mlab" id="mdLeagueLab">LEAGUE RESULTS</div><div id="mdLeague" style="margin-top:8px"></div></div>
+      <div class="panel hidden" id="mdCupsPanel"><div class="mlab">CUP ACTION</div><div id="mdCups" style="margin-top:8px"></div></div>
       <div class="foot" id="mdFoot"></div>
     </div>
   </div>
@@ -455,6 +587,16 @@ function render() {
   $("hWindow").innerHTML = s.window.open
     ? '<span class="win-open">&#9679;</span> ' + s.window.label
     : '<span class="win-shut">&#9679;</span> ' + s.window.label;
+  if ($("hLive")) $("hLive").textContent = s.users.length + (s.users.length === 1 ? " MANAGER LIVE" : " MANAGERS LIVE");
+  if ($("hubWho")) $("hubWho").textContent = s.myClub
+    ? "YOUR CLUB \u00b7 " + (s.myLeague || "").toUpperCase() + " \u00b7 MANAGED BY " + s.you.toUpperCase() + (s.you === s.host ? " (HOST)" : "")
+    : "WELCOME \u00b7 " + s.you.toUpperCase() + (s.you === s.host ? " (HOST)" : "");
+  if ($("stSquad")) $("stSquad").textContent = s.myClub ? s.myClub.squad.length : "-";
+  const hubTbl = (s.tables && s.myLeague && s.tables[s.myLeague]) || s.table || [];
+  const hubIdx = s.myClub ? hubTbl.findIndex(r => r.team === s.myClub.name) : -1;
+  const ordn = n => { const v = n % 100; return n + (["th","st","nd","rd"][(v - 20) % 10] || ["th","st","nd","rd"][v] || "th"); };
+  if ($("stPos")) $("stPos").textContent = hubIdx >= 0 ? ordn(hubIdx + 1) : "-";
+  if ($("stPts")) $("stPts").textContent = hubIdx >= 0 ? hubTbl[hubIdx].pts : "-";
 
   renderMatchday(s);
 
@@ -480,7 +622,15 @@ function render() {
       return `<button class="${taken?'taken':''} ${mine?'mine':''}" ${taken?'disabled':''} onclick="pick('${t.name.replace(/'/g, "\\'")}')">${t.name}<br><span style="font-size:11px;color:var(--dim)">${money(t.budget)} · ${taken?t.manager:(mine?'You':'Free')}</span></button>`;
     }).join("");
     $("startBtn").classList.toggle("hidden", s.you !== s.host);
-    $("lobbyList").textContent = "In the lobby: " + s.users.map(u => u.name + (u.team ? " → " + u.team : " (picking)")).join(", ");
+    if ($("codeBoxes")) $("codeBoxes").innerHTML = (s.code || "").split("").map(c => `<div class="codebox">${c}</div>`).join("");
+    if ($("mgrCount")) $("mgrCount").textContent = "MANAGERS \u00b7 " + s.users.length;
+    $("lobbyList").innerHTML = s.users.map((u, i) => {
+      const tag = u.name === s.you
+        ? '<span class="tag human">YOU</span>'
+        : (u.name === s.host ? '<span class="tag">HOST</span>' : (u.team ? '<span class="tag">READY</span>' : '<span class="tag">PICKING</span>'));
+      return `<div class="mgrow"><span class="n">${String(i + 1).padStart(2, "0")}</span>
+        <div><div class="nm">${u.name}</div><div class="cl">${u.team ? u.team : "CHOOSING A CLUB\u2026"}</div></div>${tag}</div>`;
+    }).join("") + '<div class="msub" style="padding:12px 0;color:var(--ghost)">WAITING FOR MORE MANAGERS\u2026</div>';
   }
 
   // squad
@@ -534,8 +684,8 @@ function render() {
   $("thisWeek").innerHTML = s.thisWeek.map(m => fixtureRow(m, s)).join("") || "<p style='color:var(--dim)'>Season done. New one starts on next sim.</p>";
   $("lastWeek").innerHTML = s.lastWeek.map(m => fixtureRow(m, s)).join("") || "<p style='color:var(--dim)'>No results yet.</p>";
   $("myFixtures").innerHTML = (s.myFixtures||[]).map(m => m.home ? `
-    <div class="fixture"><span>W${m.week} · ${m.home} v ${m.away}</span>
-    <span class="score">${m.hg===null?"-":m.hg+"-"+m.ag}</span></div>` : "").join("");
+    <div class="fixture"><span class="fh"><span class="msub" style="margin-right:8px">W${m.week}</span>${m.home}</span>
+    <span class="score">${m.hg===null?"v":m.hg+"-"+m.ag}</span><span class="fa">${m.away}</span></div>` : "").join("");
 
   // cups
   renderCups(s);
@@ -616,8 +766,8 @@ function render() {
 
 let MANAGERS = {};
 function fixtureRow(m, s) {
-  const nm = t => { const b = MANAGERS[t]; return (b && b !== "AI") ? " ("+b+")" : ""; };
-  return `<div class="fixture"><span>${m.home}${nm(m.home)} v ${m.away}${nm(m.away)}</span><span class="score">${m.hg===null?"":m.hg+"-"+m.ag}</span></div>`;
+  const nm = t => { const b = MANAGERS[t]; return (b && b !== "AI") ? ` <span class="tag human">${b}</span>` : ""; };
+  return `<div class="fixture"><span class="fh">${m.home}${nm(m.home)}</span><span class="score">${m.hg===null?"v":m.hg+"-"+m.ag}</span><span class="fa">${m.away}${nm(m.away)}</span></div>`;
 }
 
 function offerCard(o, role) {
@@ -635,13 +785,15 @@ function offerCard(o, role) {
     <button class="small red" onclick="respond(${o.id},'decline')">Walk away</button>` :
     `<span class="tag">Window shut</span> <button class="small red" onclick="respond(${o.id},'decline')">Walk away</button>`;
   const who = o.direction === "inbound"
-    ? `${o.fromClub} → your ${p}`
-    : `${o.toClub} → ${p} (${o.sellerClub})`;
-  return `<div class="offer"><div class="who">${who}</div>
-    <div>Bid <b class="mono">${money(o.fee)}</b> ${o.counterFee && o.status==='countered' ? " · countered at <b class='mono'>"+money(o.counterFee)+"</b>" : ""}
-    · <span class="status-${o.status}">${o.status.replace(/_/g," ")}</span></div>
-    ${o.note?`<div class="note">${o.note}</div>`:""}
-    <div style="margin-top:6px">${actions}</div></div>`;
+    ? `${o.fromClub} → YOUR ${p.toUpperCase()}`
+    : `${o.toClub} → ${p.toUpperCase()} (${o.sellerClub})`;
+  const shownFee = (o.status === "countered" && o.counterFee) ? o.counterFee : o.fee;
+  const feeTag = (o.status === "countered" && o.counterFee) ? "THEIR COUNTER" : "BID";
+  return `<div class="offer"><div class="ohead"><span class="who">${who}</span>
+    <span class="msub status-${o.status}">${o.status.replace(/_/g," ").toUpperCase()}</span></div>
+    <div class="fee">${money(shownFee)} <small>${feeTag}${o.status === "countered" && o.counterFee ? " · YOUR BID " + money(o.fee) : ""}</small></div>
+    ${o.note?`<div class="note">"${o.note}"</div>`:""}
+    <div class="oact">${actions}</div></div>`;
 }
 
 let PLAYER_NAMES = {};
@@ -741,33 +893,45 @@ function renderLineup() {
   const slots = FORMATIONS[LB.formation];
   $("formSel").value = LB.formation;
   const filled = LB.xi.filter(x => x !== null).length;
-  $("pitch").innerHTML = slots.map((slot, i) => {
+  $("pitch").innerHTML = '<div class="pbox top"></div><div class="pbox bot"></div>' + slots.map((slot, i) => {
     const id = LB.xi[i];
     const p = id !== null ? luPlayer(id) : null;
     const selCls = (p && LB.sel === id) ? " luSel" : "";
     const inner = p
-      ? `<span class="luchipname">${luShort(p.name)}</span><span class="luchiprat">${p.rating} \u00b7 ${p.age}y</span><span class="luX" onclick="luSlotClear(${i},event)">\u00d7</span>`
-      : `<span class="luplus">+</span><span class="lulabel">${slot.l}</span>`;
-    return `<div class="luslot${p ? " lufilled" : ""}${selCls}" style="left:${slot.x}%;top:${slot.y}%"
+      ? `<span class="luball">${p.rating}<span class="luX" onclick="luSlotClear(${i},event)">\u00d7</span></span><span class="luplate">${luShort(p.name)}</span><span class="luage">${p.age}Y</span>`
+      : `<span class="luball">+</span><span class="luplate">${slot.l}</span>`;
+    return `<div class="luslot${p ? " lufilled" : ""}${slot.gk ? " gk" : ""}${selCls}" style="left:${slot.x}%;top:${slot.y}%"
       data-slot="${i}" onclick="luSlotTap(${i})" ondragover="event.preventDefault()"
       ondrop="luDrop(event,${i})">${inner}</div>`;
   }).join("") + `<div class="lucount">${filled}/11</div>`;
+  const fl = $("formList");
+  if (fl) fl.innerHTML = Object.keys(FORMATIONS).map(f =>
+    `<div class="furow${f === LB.formation ? " on" : ""}" onclick="luSetFormation('${f}')">
+      <span class="fn">${f}</span><span class="ft">${f === LB.formation ? "ACTIVE" : "SET"}</span></div>`).join("");
   const pool = s.myClub.squad
     .filter(p => !LB.xi.includes(p.id) && !LB.subs.includes(p.id))
     .sort((a, b) => ({GK:0,DF:1,MF:2,FW:3}[a.pos] - {GK:0,DF:1,MF:2,FW:3}[b.pos]) || b.rating - a.rating);
   $("poolList").innerHTML = pool.map(p =>
-    `<div class="pchip${LB.sel === p.id ? " luSel" : ""}" draggable="true" ondragstart="luDrag(event,${p.id})"
-      onclick="luPoolTap(${p.id})"><b class="pos-${p.pos}">${p.pos}</b> ${p.name} <span class="pmeta">${p.rating} \u00b7 ${p.age}y</span>
-      <button class="small" onclick="luQuickStart(${p.id},event)">Start</button><button class="small ghost" onclick="luBench(${p.id},event)">Sub</button></div>`).join("") ||
-    "<p style='color:var(--dim);font-size:13px'>Everyone is in the matchday squad.</p>";
+    `<div class="benchrow${LB.sel === p.id ? " sel" : ""}" draggable="true" ondragstart="luDrag(event,${p.id})"
+      onclick="luPoolTap(${p.id})"><span class="bp pos-${p.pos}">${p.pos}</span>
+      <span class="bn">${p.name} <span>${p.age}Y</span> <b>${p.rating}</b></span>
+      <span class="ba"><button class="small" onclick="luQuickStart(${p.id},event)">Start</button><button class="small ghost" onclick="luBench(${p.id},event)">Sub</button></span></div>`).join("") ||
+    "<p style='color:var(--dim);font-size:13px;padding:6px 18px'>Everyone is in the matchday squad.</p>";
   $("subCount").textContent = LB.subs.length + "/9";
   $("subList").innerHTML = LB.subs.map(id => {
     const p = luPlayer(id); if (!p) return "";
-    return `<div class="pchip" onclick="luUnbench(${p.id})"><b class="pos-${p.pos}">${p.pos}</b> ${p.name} <span class="pmeta">${p.rating} \u00b7 ${p.age}y</span> <span class="luX">\u00d7</span></div>`;
-  }).join("") || "<p style='color:var(--dim);font-size:13px'>No subs yet.</p>";
+    return `<div class="benchrow" onclick="luUnbench(${p.id})" title="Tap to pull him off the bench"><span class="bp pos-${p.pos}">${p.pos}</span>
+      <span class="bn">${p.name} <span>${p.age}Y</span> <b>${p.rating}</b></span>
+      <span class="ba"><button class="small red">\u00d7</button></span></div>`;
+  }).join("") || "<p style='color:var(--dim);font-size:13px;padding:4px 18px'>No subs yet.</p>";
 }
 
 window.luDrag = (ev, id) => { ev.dataTransfer.setData("text/plain", String(id)); };
+window.luSetFormation = f => {
+  if (!FORMATIONS[f]) return;
+  $("formSel").value = f;
+  $("formSel").onchange();
+};
 window.luDrop = (ev, slotIdx) => {
   ev.preventDefault();
   const id = Number(ev.dataTransfer.getData("text/plain"));
@@ -835,15 +999,25 @@ function renderRomano(s) {
     box.innerHTML = "<p style='color:var(--dim)'>Quiet day on the transfer front. Bids, breakdowns and here we gos will drop here the moment something moves.</p>";
     return;
   }
-  box.innerHTML = posts.map(p => `
-    <div class="fabpost">
+  const wireBadge = t => {
+    if (t.includes("HERE WE GO")) return { cls: "go", label: "HERE WE GO", hero: true };
+    if (t.includes("EXCLUSIVE")) return { cls: "info", label: "EXCL", hero: false };
+    if (/rejected|turned down|declined|walked away|pulled out|off the table|collapsed|no deal|snubbed/i.test(t)) return { cls: "off", label: "DEAL OFF", hero: false };
+    if (/window/i.test(t)) return { cls: "info", label: "OFFICIAL", hero: false };
+    return { cls: "info", label: "WIRE", hero: false };
+  };
+  box.innerHTML = posts.map(p => {
+    const b = wireBadge(p.text || "");
+    return `
+    <div class="fabpost${b.hero ? " hero" : ""}">
       <div class="fabhead">
-        <span class="fabav">FR</span>
-        <span class="fabname">Fabrizio Romano <span class="fabtick">\u2714</span></span>
-        <span class="fabhandle">@FabrizioRomano \u00b7 ${timeAgo(p.t)}</span>
+        <span class="fabtime">${timeAgo(p.t)}</span>
+        <span class="fabbadge ${b.cls}">${b.label}</span>
+        <span class="fabtime" style="margin-left:auto">FABRIZIO ROMANO</span>
       </div>
       <div class="fabtext">${p.text}</div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 }
 
 // ---- matchday lock ----
@@ -860,9 +1034,32 @@ function renderMatchday(s) {
     ? "Season done! " + myChamp + " win the " + (s.myLeague || "league") + ". Full wrap in the news feed."
     : "The whole lobby watches the results together until the host moves everyone on.";
   $("mdSub").textContent = champLine;
+  if ($("mdLeagueLab")) $("mdLeagueLab").textContent = (s.myLeague || "LEAGUE").toUpperCase() + " \u00b7 MW " + lock.week;
+  const hero = $("mdHero");
+  if (hero) {
+    let mm = myName ? (s.lastWeek || []).find(m => m.home === myName || m.away === myName) : null;
+    if (!mm && myName) (s.cups || []).forEach(cup => cup.rounds.forEach(r => {
+      if (r.week === lock.week && r.matches[0] && r.matches[0].hg !== null) {
+        const t = r.matches.find(m => m.home === myName || m.away === myName);
+        if (t && !mm) mm = t;
+      }
+    }));
+    if (mm && mm.hg !== null && mm.hg !== undefined) {
+      const homeMine = mm.home === myName;
+      hero.innerHTML = `
+        <div class="tm${homeMine ? "" : " away"}" style="text-align:right">${mm.home}</div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <span class="sc${homeMine ? "" : " away"}">${mm.hg}</span>
+          <span class="dash">-</span>
+          <span class="sc${homeMine ? " away" : ""}">${mm.ag}</span>
+        </div>
+        <div class="tm${homeMine ? " away" : ""}">${mm.away}</div>`;
+      hero.classList.remove("hidden");
+    } else hero.classList.add("hidden");
+  }
   $("mdLeague").innerHTML = (s.lastWeek||[]).map(m => {
     const mine = myName && (m.home === myName || m.away === myName);
-    return `<div class="fixture ${mine?'mine':''}"><span>${m.home} v ${m.away}</span><span class="score">${m.hg}-${m.ag}</span></div>`;
+    return `<div class="fixture ${mine?'mine':''}"><span class="fh">${m.home}</span><span class="score">${m.hg}-${m.ag}</span><span class="fa">${m.away}</span></div>`;
   }).join("") || "<p style='color:var(--dim)'>No league games this week.</p>";
   let cupHtml = "";
   (s.cups||[]).forEach(cup => {
@@ -873,7 +1070,7 @@ function renderMatchday(s) {
       cupHtml += `<div class="cuproundname">${cup.title} · ${r.name}</div>` + r.matches.map(m => {
         const mine = myName && (m.home === myName || m.away === myName);
         const score = m.hg + "-" + m.ag + (m.pens ? " p: " + m.winner : "");
-        return `<div class="fixture ${mine?'mine':''}"><span>${m.home} v ${m.away}</span><span class="score">${score}</span></div>`;
+        return `<div class="fixture ${mine?'mine':''}"><span class="fh">${m.home}</span><span class="score">${score}</span><span class="fa">${m.away}</span></div>`;
       }).join("");
     });
   });
@@ -884,14 +1081,14 @@ function renderMatchday(s) {
     const more = finalWeek
       ? `<button id="mdNext" class="gold">Start next season (host)</button>`
       : `<button id="mdSim" class="gold">Sim next week</button>`;
-    $("mdFoot").innerHTML = more + `<button id="mdBack">Back to the club (everyone)</button>`;
+    $("mdFoot").innerHTML = `<span class="msub">CUPS AND EUROPE SIM WITH THE WEEK. SEE THE CUPS TAB.</span><span style="display:flex;gap:10px;flex-wrap:wrap">` + more + `<button id="mdBack">I'VE SEEN IT &rarr;</button></span>`;
     const nextB = $("mdNext");
     if (nextB) nextB.onclick = async () => { nextB.disabled = true; try { await api("/api/nextseason",{}); await tick(); } catch(e){ alert(e.message); } };
     const sim = $("mdSim");
     if (sim) sim.onclick = async () => { sim.disabled = true; try { await api("/api/sim",{}); await tick(); } catch(e){ alert(e.message); } };
     $("mdBack").onclick = async () => { try { await api("/api/unlock",{}); await tick(); } catch(e){ alert(e.message); } };
   } else {
-    $("mdFoot").innerHTML = `<span class="waiting">Waiting for ${s.host} to send everyone back...</span>`;
+    $("mdFoot").innerHTML = `<span class="msub">CUPS AND EUROPE SIM WITH THE WEEK. SEE THE CUPS TAB.</span><span class="waiting">WAITING FOR ${s.host.toUpperCase()} TO ROLL THE WORLD ON...</span>`;
   }
 }
 
@@ -968,7 +1165,7 @@ function renderNations(s) {
 function renderCalendar(s) {
   const box = $("calBox");
   if (!box) return;
-  if (!s.started) { box.innerHTML = "<p style='color:var(--dim)'>The calendar fills in once the season starts.</p>"; return; }
+  if (!s.started) { box.innerHTML = "<p style='color:var(--dim);padding:12px'>The calendar fills in once the season starts.</p>"; return; }
   const total = s.totalRounds || 38;
   const myName = s.myClub ? s.myClub.name : null;
   const fixByWeek = {};
@@ -977,31 +1174,49 @@ function renderCalendar(s) {
   (s.cups || []).forEach(cup => cup.rounds.forEach(r => {
     (cupsByWeek[r.week] = cupsByWeek[r.week] || []).push({ cup, r });
   }));
+  const resFor = (home, away, hg, ag, pens, winner) => {
+    if (hg === null || hg === undefined) return null;
+    const score = hg + "-" + ag + (pens ? " P" : "");
+    if (!myName || (home !== myName && away !== myName)) return { txt: score, cls: "d" };
+    let cls = "d";
+    if (pens && winner) cls = winner === myName ? "w" : "l";
+    else if (hg !== ag) cls = ((home === myName && hg > ag) || (away === myName && ag > hg)) ? "w" : "l";
+    return { txt: score, cls };
+  };
   let html = "";
   for (let w = 1; w <= total; w++) {
     const now = w === s.round + 1;
     const done = w <= s.round;
-    let bits = [];
+    let comp = "", compGold = false, opp = "", res = null, extra = [];
     const f = fixByWeek[w];
     if (f) {
-      const score = f.hg === null || f.hg === undefined ? "" : ` <b class="mono">${f.hg}-${f.ag}</b>`;
-      bits.push(`<span>${s.myLeague}: ${f.home} v ${f.away}${score}</span>`);
+      comp = (s.myLeague || "LEAGUE").toUpperCase();
+      opp = myName ? ((f.home === myName ? f.away : f.home) + (f.home === myName ? " (H)" : " (A)")) : (f.home + " v " + f.away);
+      res = resFor(f.home, f.away, f.hg, f.ag);
     }
     (cupsByWeek[w] || []).forEach(({ cup, r }) => {
       let tie = null;
       if (myName) tie = r.matches.find(m => m.home === myName || m.away === myName);
-      const scope = cup.scope === "intl" ? " (nations)" : "";
+      const scope = cup.scope === "intl" ? " (NATIONS)" : "";
       if (tie) {
-        const score = tie.hg === null ? "" : ` <b class="mono">${tie.hg}-${tie.ag}${tie.pens ? " p" : ""}</b>`;
-        bits.push(`<span class="calmine">${cup.title} ${r.name}: ${tie.home} v ${tie.away}${score}</span>`);
+        const line = (tie.home === myName ? tie.away + " (H)" : tie.home + " (A)");
+        const tieRes = resFor(tie.home, tie.away, tie.hg, tie.ag, tie.pens, tie.winner);
+        if (!opp) { comp = (cup.title + " " + r.name).toUpperCase(); compGold = true; opp = line; res = tieRes; }
+        else extra.push((cup.title + " " + r.name).toUpperCase() + ": " + line + (tieRes ? " " + tieRes.txt : ""));
       } else if (cupIsMine(cup, s) || r.matches.length === 1) {
-        bits.push(`<span>${cup.title}${scope}: ${r.name}</span>`);
+        extra.push((cup.title + scope + ": " + r.name).toUpperCase());
       }
     });
-    if (w <= 4 || (w >= 20 && w <= 23)) bits.push(`<span class="tag">Transfer window open</span>`);
-    if (w === total) bits.push(`<span class="tag" style="color:var(--gold)">Final matchweek, season wraps up</span>`);
-    if (!bits.length) bits.push(`<span style="color:var(--dim)">Free week</span>`);
-    html += `<div class="calweek ${now?'now':''} ${done?'done':''}"><div class="calw">Wk ${w}</div><div class="calbits">${bits.join("")}</div></div>`;
+    const windowOpen = w <= 4 || (w >= 20 && w <= 23);
+    if (w === total) extra.push("SEASON WRAPS UP");
+    if (!opp && !extra.length && !windowOpen) opp = "FREE WEEK";
+    html += `<div class="calcell ${now ? "now" : ""} ${done ? "done" : ""}">
+      <div class="ctop"><span class="cmw">MW ${String(w).padStart(2, "0")}</span><span class="ccomp" style="${compGold ? "color:var(--gold)" : ""}">${comp}</span></div>
+      ${opp ? `<div class="copp" style="${opp === "FREE WEEK" ? "color:var(--faint)" : ""}">${opp}</div>` : ""}
+      ${res ? `<div class="cres ${res.cls}">${res.txt}</div>` : ""}
+      ${windowOpen ? `<div class="cwin">WINDOW OPEN</div>` : ""}
+      ${extra.length ? `<div class="cextra">${extra.join("<br>")}</div>` : ""}
+    </div>`;
   }
   box.innerHTML = html;
 }
