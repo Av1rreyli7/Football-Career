@@ -462,6 +462,7 @@ function doTransfer(game, offer) {
     if (!sw || sw.club !== offer.toClub) return { ok: false, msg: "The swap player is no longer at your club. Deal is off." };
     if (sw.loanOwner) return { ok: false, msg: "You can't include a loan player in a swap." };
     if (buyer.squad.length <= 14) return { ok: false, msg: "Your squad is too thin to give a player away in the swap." };
+    if (seller.squad.length >= 30) return { ok: false, msg: "The selling club has no squad room for the swap player." };
   }
   buyer.budget = Math.round((buyer.budget - offer.fee) * 10) / 10;
   seller.budget = Math.round((seller.budget + offer.fee) * 10) / 10;
@@ -491,6 +492,32 @@ function resolveAiSellerOffer(game, offer) {
   const p = game.players[offer.playerId];
   if (p.club !== offer.sellerClub) { offer.status = "void"; offer.note = "The player already left that club."; return; }
   const baseAsk = p.listed ? p.value : askingPrice(game, p, p.club);
+  // swap bids to AI clubs are accept or reject: the swap player counts at 85
+  // percent of his value, and there is no haggling on a part exchange
+  if (offer.swapId) {
+    const sw = game.players[offer.swapId];
+    if (!sw || sw.club !== offer.toClub) { offer.status = "void"; offer.note = "The swap player is no longer at your club."; return; }
+    const credit = Math.round(sw.value * 0.85 * 10) / 10;
+    const total = Math.round((offer.fee + credit) * 10) / 10;
+    if (total >= baseAsk - 0.05) {
+      const buyerBig = BIG_CLUBS.includes(offer.toClub);
+      if (p.rating >= 85 && p.age > 22 && !buyerBig && Math.random() < 0.45) {
+        offer.status = "player_declined";
+        offer.note = `${p.club} liked the package but ${p.name} turned down the move. Bigger clubs are circling.`;
+        romano(game, `❌ BREAKING: ${p.name} to ${offer.toClub} is OFF! The clubs agreed a cash plus player deal but the player said no to the project.`);
+        return;
+      }
+      const res = doTransfer(game, offer);
+      offer.status = res.ok ? "accepted" : "failed";
+      offer.note = res.ok ? `Deal done: £${offer.fee}m plus ${sw.name}. They valued the package at £${total}m against an ask of £${Math.round(baseAsk * 10) / 10}m.` : res.msg;
+      if (res.ok) romano(game, `🚨✅ Part exchange completed! ${p.name} to ${offer.toClub}, with ${sw.name} plus ${fmtFee(offer.fee)} going the other way. Both clubs happy with the maths.`);
+    } else {
+      offer.status = "declined";
+      offer.note = `${p.club} rejected the package. They rate ${sw.name} at £${credit}m in a trade, so your offer is worth £${total}m against an ask of £${Math.round(baseAsk * 10) / 10}m. Add cash or a better player, part exchanges are take it or leave it.`;
+      romano(game, `❌ ${p.club} have said no to a cash plus player approach from ${offer.toClub} for ${p.name}. The package fell short of their valuation.`);
+    }
+    return;
+  }
   // AI clubs haggle: they start at the asking price but can be talked down to a
   // floor a fair way below it. Listed players go even cheaper.
   const floor = Math.round(Math.max(0.5, p.listed ? p.value * 0.8 : Math.min(p.value, baseAsk * 0.8)) * 10) / 10;
@@ -1208,7 +1235,6 @@ app.post("/api/offer", (req, res) => {
   };
   const sellerHuman = humanOf(game, p.club);
   if (req.body.swapId !== undefined && req.body.swapId !== null && req.body.swapId !== "") {
-    if (!sellerHuman) return res.status(400).json({ error: "Swap deals only work between real managers. AI clubs want cash." });
     const sw = game.players[Number(req.body.swapId)];
     if (!sw || sw.club !== user.team) return res.status(400).json({ error: "Pick one of your own players for the swap." });
     if (sw.academy || sw.loanOwner) return res.status(400).json({ error: "That player can't go in a swap." });
@@ -1380,6 +1406,7 @@ app.post("/api/loanin", (req, res) => {
   if (!p || p.academy) return res.status(400).json({ error: "Player not found." });
   if (p.club === user.team) return res.status(400).json({ error: "He already plays for you." });
   if (humanOf(game, p.club)) return res.status(400).json({ error: "You can only loan from AI clubs. Talk to a real manager and buy instead." });
+  if (p.rating > 85) return res.status(400).json({ error: "Clubs don't loan out their superstars. Anyone rated 86 or higher has to be bought." });
   if (p.loanOwner) return res.status(400).json({ error: "He is already out on loan." });
   const owner = game.clubs[p.club];
   if (owner.squad.length <= 14) return res.status(400).json({ error: `${p.club} are too thin to let him go.` });

@@ -1647,7 +1647,10 @@ window.bid = async (id, asking, humanSeller) => {
   const fee = prompt("Your bid in £m (asking around " + asking + ")");
   if (!fee) return;
   let swapId = null;
-  if (humanSeller && STATE && STATE.myClub && confirm("Add one of your players to sweeten the deal? (a swap)")) {
+  const swapQ = humanSeller
+    ? "Add one of your players to sweeten the deal? (a swap)"
+    : "Add one of your players to the deal? AI clubs count him at 85% of his value and only accept a fair package, no haggling.";
+  if (STATE && STATE.myClub && confirm(swapQ)) {
     const options = STATE.myClub.squad.filter(p => !p.loanOwner && Number(p.id) !== Number(id));
     const swapName = prompt("Type the player's name to include:\n" + options.map(p => p.name + " (" + p.rating + ")").join("\n"));
     if (swapName) {
@@ -1680,7 +1683,7 @@ async function loadMarket() {
       if (!open) acts = '<span class="tag">Window shut</span>';
       else if (onLoan) acts = '<span class="tag loan">On loan</span>';
       else acts = `<button class="small" onclick="bid(${p.id}, ${p.asking}, ${p.humanOwned ? "true" : "false"})">Bid</button>` +
-        (p.humanOwned ? "" : ` <button class="small ghost" onclick="loanIn(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Loan</button>`);
+        (p.humanOwned || p.rating > 85 ? "" : ` <button class="small ghost" onclick="loanIn(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Loan</button>`);
       return `
       <tr><td>${p.name} ${p.humanOwned?'<span class="tag human">Human club</span>':''} ${p.listed?'<span class="tag listed">Listed</span>':''} ${onLoan?'<span class="tag loan">Loan</span>':''}</td>
       <td>${p.club}</td><td class="pos-${p.pos}">${p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
