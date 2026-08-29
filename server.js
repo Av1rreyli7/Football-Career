@@ -122,7 +122,9 @@ function makeAllCups(game) {
   const arTop = (game.lastTables && game.lastTables["Argentina"]) ? game.lastTables["Argentina"].slice(0, 4) : rankedByStrength(game, "Argentina").slice(0, 4);
   cups.libertadores = makeCup("libertadores", "Copa Libertadores", [10, 19, 29], [...brTop, ...arTop], { win: 2, trophy: 15 });
   if (game.nations && Object.keys(game.nations).length >= 4) {
-    cups.intl = makeCup("intl", "International Cup", [11, 18, 26, 34], Object.keys(game.nations), { win: 0, trophy: 0 }, "intl");
+    const worldCup = game.season % 4 === 0;
+    cups.intl = makeCup("intl", worldCup ? "World Cup" : "International Cup", [11, 18, 26, 34], Object.keys(game.nations), { win: 0, trophy: 0 }, "intl");
+    if (worldCup) log(game, `SEASON ${game.season} IS A WORLD CUP SEASON! Every nation is in. The final falls on week 34.`);
   }
   return cups;
 }
@@ -139,6 +141,7 @@ function simCupsForWeek(game) {
     const matches = cup.rounds[cup.roundIdx];
     for (const m of matches) {
       simMatch(game, m);
+      if (humanInvolved(game, [m.home, m.away]) || matches.length === 1) cupEvents(game, m);
       if (m.hg === m.ag) {
         m.pens = true;
         const A = strengths(game, m.home), B = strengths(game, m.away);
@@ -211,9 +214,11 @@ function makeFixtures(teamNames) {
 }
 
 // ---------- team strength ----------
+function avail(p) { return p && !(p.inj > 0) && !(p.ban > 0); }
+
 function bestXI(game, teamName) {
   const ids = game.clubs[teamName].squad;
-  const squad = ids.map(id => game.players[id]).filter(Boolean);
+  const squad = ids.map(id => game.players[id]).filter(avail);
   const gks = squad.filter(p => p.pos === "GK").sort((a, b) => b.rating - a.rating);
   const out = squad.filter(p => p.pos !== "GK").sort((a, b) => b.rating - a.rating);
   const xi = [];
@@ -228,7 +233,7 @@ function chosenXI(game, teamName) {
   const lu = club.lineup;
   if (lu && Array.isArray(lu.xi) && lu.xi.length === 11) {
     const squad = new Set(club.squad);
-    if (lu.xi.every(id => squad.has(id) && game.players[id])) {
+    if (lu.xi.every(id => squad.has(id) && avail(game.players[id]))) {
       const xi = lu.xi.map(id => game.players[id]);
       if (xi.filter(p => p.pos === "GK").length === 1) return xi;
     }
@@ -238,7 +243,7 @@ function chosenXI(game, teamName) {
 
 function nationXI(game, nationName) {
   const nation = game.nations[nationName];
-  return nation.playerIds.map(id => game.players[id]).filter(Boolean)
+  return nation.playerIds.map(id => game.players[id]).filter(avail)
     .sort((a, b) => b.rating - a.rating).slice(0, 11);
 }
 
@@ -265,6 +270,8 @@ function simMatch(game, m) {
   if (tA === "defensive") { lh *= 0.85; la *= 0.78; }
   if (tB === "attacking") { la *= 1.18; lh *= 1.12; }
   if (tB === "defensive") { la *= 0.85; lh *= 0.78; }
+  if (((game.clubs[m.home] || {}).staff || {}).analyst) lh *= 1.05;
+  if (((game.clubs[m.away] || {}).staff || {}).analyst) la *= 1.05;
   m.hg = poisson(Math.min(lh, 4.2));
   m.ag = poisson(Math.min(la, 4.2));
 }
@@ -310,8 +317,9 @@ function addAcademyIntake(game, clubName, n) {
     const r = Math.random();
     const pos = r < 0.1 ? "GK" : r < 0.4 ? "DF" : r < 0.75 ? "MF" : "FW";
     const age = 15 + Math.floor(Math.random() * 3);
-    const rating = 54 + Math.floor(Math.random() * 13);
-    const pot = Math.min(92, rating + 8 + Math.floor(Math.random() * 13));
+    const youth = (club.staff || {}).youth ? 2 : 0;
+    const rating = 54 + youth + Math.floor(Math.random() * 13);
+    const pot = Math.min(94, rating + 8 + youth + Math.floor(Math.random() * 13));
     const id = game.playerSeq++;
     game.players[id] = { id, name, pos, age, rating, pot, academy: true, value: marketValue(rating, age, pos), club: clubName, league: club.league };
     club.academy.push(id);
@@ -449,6 +457,12 @@ function doTransfer(game, offer) {
   if (seller.squad.length <= 13) return { ok: false, msg: "The selling club can't go below 13 players." };
   if (buyer.budget < offer.fee) return { ok: false, msg: "Not enough budget to complete the deal." };
   if (buyer.squad.length >= 30) return { ok: false, msg: "Squad is full (30 max)." };
+  const sw = offer.swapId ? game.players[offer.swapId] : null;
+  if (offer.swapId) {
+    if (!sw || sw.club !== offer.toClub) return { ok: false, msg: "The swap player is no longer at your club. Deal is off." };
+    if (sw.loanOwner) return { ok: false, msg: "You can't include a loan player in a swap." };
+    if (buyer.squad.length <= 14) return { ok: false, msg: "Your squad is too thin to give a player away in the swap." };
+  }
   buyer.budget = Math.round((buyer.budget - offer.fee) * 10) / 10;
   seller.budget = Math.round((seller.budget + offer.fee) * 10) / 10;
   seller.squad = seller.squad.filter(id => id !== p.id);
@@ -458,9 +472,18 @@ function doTransfer(game, offer) {
   p.club = offer.toClub;
   p.league = buyer.league;
   p.listed = false;
+  if (sw) {
+    buyer.squad = buyer.squad.filter(id => id !== sw.id);
+    stripFromLineup(buyer, sw.id);
+    seller.squad.push(sw.id);
+    sw.club = from;
+    sw.league = seller.league;
+    sw.listed = false;
+    voidOtherOffers(game, sw.id, offer.id);
+  }
   voidOtherOffers(game, p.id, offer.id);
-  log(game, `TRANSFER: ${p.name} joins ${offer.toClub} from ${from} for £${offer.fee}m.`);
-  romano(game, `🚨✅ HERE WE GO! ${p.name} to ${offer.toClub}, done deal! ${fmtFee(offer.fee)} package agreed with ${from}. Medical booked, contract signed.`);
+  log(game, `TRANSFER: ${p.name} joins ${offer.toClub} from ${from} for £${offer.fee}m${sw ? ` plus ${sw.name} going the other way` : ""}.`);
+  romano(game, `🚨✅ HERE WE GO! ${p.name} to ${offer.toClub}, done deal! ${fmtFee(offer.fee)}${sw ? " plus " + sw.name + " in a swap" : " package"} agreed with ${from}. Medical booked, contract signed.`);
   return { ok: true };
 }
 
@@ -523,7 +546,7 @@ function aiInboundBids(game) {
   for (const user of Object.values(game.users)) {
     if (!user.team) continue;
     const club = game.clubs[user.team];
-    const candidates = club.squad.map(id => game.players[id]).filter(p => p && (p.listed || p.rating >= 84));
+    const candidates = club.squad.map(id => game.players[id]).filter(p => p && !p.loanOwner && (p.listed || p.rating >= 84));
     if (!candidates.length) continue;
     const chance = candidates.some(p => p.listed) ? 0.75 : 0.16;
     if (Math.random() > chance) continue;
@@ -686,6 +709,45 @@ function endOfSeason(game) {
     table: tableFor(game, "Premier League").map(r => ({ team: r.team, pts: r.pts })),
     tables: historyTables
   });
+  // loans come home before the new season, and the kids come back sharper
+  for (const p of Object.values(game.players)) {
+    if (!p.loanOwner) continue;
+    const owner = game.clubs[p.loanOwner];
+    const holder = game.clubs[p.club];
+    if (owner && holder && p.club !== p.loanOwner) {
+      holder.squad = holder.squad.filter(id => id !== p.id);
+      stripFromLineup(holder, p.id);
+      owner.squad.push(p.id);
+      const grew = p.age <= 22;
+      if (grew) p.rating = Math.min(96, p.rating + 1);
+      if (humanOf(game, p.loanOwner) || humanOf(game, p.club)) {
+        log(game, `LOAN OVER: ${p.name} returns to ${p.loanOwner}${grew ? " a better player for the minutes" : ""}.`);
+      }
+      p.club = p.loanOwner;
+      p.league = owner.league;
+    }
+    delete p.loanOwner;
+    delete p.loanFee;
+  }
+  // silverware buys patience, a bad season can cost you the job
+  for (const u of Object.values(game.users)) {
+    if (!u.team) continue;
+    const club = game.clubs[u.team];
+    if (club.conf === undefined) club.conf = 60;
+    if (champions[club.league] === u.team) club.conf = Math.min(99, club.conf + 20);
+    for (const c of Object.values(cups)) if (c.winner === u.team) club.conf = Math.min(99, club.conf + 10);
+    if (club.conf < 25) {
+      log(game, `SACKED: ${u.name} has been dismissed by ${u.team} after a season well below expectations. The board thanks them for their service.`);
+      romano(game, `\ud83d\udea8 BREAKING: ${u.team} have SACKED manager ${u.name}! Statement out in the last minutes. The hunt for a new job starts now.`);
+      u.team = null;
+      u.sacked = true;
+      club.conf = 60;
+      club.trainFocus = null;
+    } else {
+      club.conf = Math.round(club.conf * 0.5 + 60 * 0.5);
+    }
+    club.trainGained = 0;
+  }
   log(game, `SEASON ${game.season} OVER. Budgets reset for everyone, title winners bank £10m and cup winners £5m each. New fixtures and cup draws are in.`);
   game.season++;
   game.round = 0;
@@ -804,6 +866,9 @@ function migrate(game) {
   if (!game.nations) game.nations = {};
   if (!game.stats) game.stats = {};
   if (!game.romano) game.romano = [];
+  if (!game.lastEvents) game.lastEvents = {};
+  if (!game.reacts) game.reacts = [];
+  for (const u of Object.values(game.users || {})) if (u.sacked === undefined) u.sacked = false;
   for (const c of Object.values(game.clubs || {})) if (c.baseBudget === undefined) c.baseBudget = c.budget;
   if (!game.cups) game.cups = {};
   for (const u of Object.values(game.users || {})) if (u.nation === undefined) u.nation = null;
@@ -833,14 +898,16 @@ function getCtx(req, res) {
 app.post("/api/pick", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
-  if (game.started) return res.status(400).json({ error: "Season already started." });
+  if (game.started && user.team) return res.status(400).json({ error: "Season already started. You can only take a new job if you lose yours." });
   const team = req.body.team;
   const club = game.clubs[team];
   if (!club || !(LEAGUES[club.league] || {}).playable) return res.status(400).json({ error: "Pick a club from one of the playable leagues." });
   if (humanOf(game, team) && humanOf(game, team).name !== user.name) return res.status(400).json({ error: "That club is taken." });
   user.team = team;
+  club.conf = user.sacked ? 55 : (club.conf !== undefined ? club.conf : 60);
+  user.sacked = false;
   spawnAcademy(game, team);
-  log(game, `${user.name} will manage ${team}.`);
+  log(game, game.started ? `NEW JOB: ${user.name} takes over at ${team} with the season already rolling.` : `${user.name} will manage ${team}.`);
   save();
   res.json({ ok: true });
 });
@@ -934,10 +1001,12 @@ function pickWeighted(list, weights) {
   return list[list.length - 1];
 }
 
-function recordScorers(game, match, league) {
+function recordScorers(game, match, league, keepEvents) {
   game.stats = game.stats || {};
   const scoreW = { FW: 6, MF: 3, DF: 1, GK: 0.05 };
   const assistW = { FW: 3, MF: 5, DF: 1.5, GK: 0.2 };
+  const ev = [];
+  const contrib = {};
   for (const side of ["home", "away"]) {
     const clubName = match[side];
     const club = game.clubs[clubName];
@@ -950,14 +1019,54 @@ function recordScorers(game, match, league) {
       const scorer = pickWeighted(xi, scoreW);
       const st = game.stats[scorer.id] = game.stats[scorer.id] || { g: 0, a: 0 };
       st.g++;
+      contrib[scorer.id] = (contrib[scorer.id] || 0) + 3;
+      ev.push({ n: scorer.name, c: clubName, min: 2 + Math.floor(Math.random() * 89) });
       if (Math.random() < 0.72) {
         const others = xi.filter(p => p.id !== scorer.id);
         const assister = pickWeighted(others, assistW);
         const sa = game.stats[assister.id] = game.stats[assister.id] || { g: 0, a: 0 };
         sa.a++;
+        contrib[assister.id] = (contrib[assister.id] || 0) + 2;
       }
     }
   }
+  if (keepEvents) {
+    ev.sort((a, b) => a.min - b.min);
+    let potm = null;
+    const ids = Object.keys(contrib);
+    if (ids.length) {
+      const best = ids.sort((a, b) => contrib[b] - contrib[a])[0];
+      const bp = game.players[best];
+      if (bp) potm = { n: bp.name, c: bp.club };
+    } else {
+      const winName = match.hg > match.ag ? match.home : match.hg < match.ag ? match.away : (Math.random() < 0.5 ? match.home : match.away);
+      const xi = chosenXI(game, winName).filter(Boolean);
+      const gk = xi.find(p => p.pos === "GK") || xi[0];
+      if (gk) potm = { n: gk.name, c: winName };
+    }
+    game.lastEvents[match.home + "|" + match.away] = { ev, potm };
+  }
+}
+
+// same picker for cup ties, display only, no stat changes
+function cupEvents(game, match) {
+  const scoreW = { FW: 6, MF: 3, DF: 1, GK: 0.05 };
+  const ev = [];
+  let star = null, starClub = null;
+  for (const side of ["home", "away"]) {
+    const clubName = match[side];
+    const goals = side === "home" ? match.hg : match.ag;
+    if (!goals || !game.clubs[clubName]) continue;
+    const xi = chosenXI(game, clubName).filter(Boolean);
+    if (!xi.length) continue;
+    for (let g = 0; g < goals; g++) {
+      const scorer = pickWeighted(xi, scoreW);
+      ev.push({ n: scorer.name, c: clubName, min: 2 + Math.floor(Math.random() * 89) });
+      if (!star || Math.random() < 0.4) { star = scorer.name; starClub = clubName; }
+    }
+  }
+  ev.sort((a, b) => a.min - b.min);
+  game.lastEvents[match.home + "|" + match.away] = { ev, potm: star ? { n: star, c: starClub } : null };
 }
 
 app.post("/api/sim", (req, res) => {
@@ -968,15 +1077,81 @@ app.post("/api/sim", (req, res) => {
   if (game.round >= (game.totalRounds || 38)) return res.status(400).json({ error: "The season is over. Check the final tables and awards, then press Start next season." });
   const wasOpen = windowOpen(game);
   const humanLeagues = new Set(Object.values(game.users).filter(u => u.team && game.clubs[u.team]).map(u => game.clubs[u.team].league));
+  game.lastEvents = {};
   for (const [league, fixtures] of Object.entries(game.leagueFixtures)) {
     const round = fixtures[game.round];
     if (!round) continue;
-    for (const m of round) { simMatch(game, m); recordScorers(game, m, league); }
+    for (const m of round) { simMatch(game, m); recordScorers(game, m, league, humanLeagues.has(league)); }
     if (humanLeagues.has(league)) {
       log(game, `${league.toUpperCase()} WEEK ${game.round + 1}: ` + round.map(m => `${m.home} ${m.hg}-${m.ag} ${m.away}`).join(" | "));
     }
   }
   game.round++;
+  // players heal and bans get served, then the new knocks come in
+  for (const p of Object.values(game.players)) {
+    if (p.inj > 0) { p.inj--; if (p.inj === 0 && humanOf(game, p.club)) log(game, `${p.name} (${p.club}) is back from injury and available again.`); }
+    if (p.ban > 0) p.ban--;
+  }
+  for (const [name, club] of Object.entries(game.clubs)) {
+    if (!(LEAGUES[club.league] || {}).playable && !humanOf(game, name)) continue;
+    const seniors = club.squad.map(id => game.players[id]).filter(p => p && !p.academy && !(p.inj > 0) && !(p.ban > 0));
+    if (!seniors.length) continue;
+    if (Math.random() < 0.08) {
+      const p = seniors[Math.floor(Math.random() * seniors.length)];
+      p.inj = (club.staff || {}).physio ? 1 : (1 + (Math.random() < 0.45 ? 1 : 0));
+      if (humanOf(game, name)) {
+        log(game, `INJURY: ${p.name} (${name}) is out for ${p.inj} week${p.inj > 1 ? "s" : ""}.`);
+      }
+    }
+    if (Math.random() < 0.035) {
+      const p2 = seniors[Math.floor(Math.random() * seniors.length)];
+      if (!(p2.inj > 0)) {
+        p2.ban = 1;
+        if (humanOf(game, name)) log(game, `RED CARD: ${p2.name} (${name}) is suspended for the next match.`);
+      }
+    }
+  }
+  // training focus: three good weeks on the grass earns a point of rating
+  for (const u of Object.values(game.users)) {
+    if (!u.team) continue;
+    const club = game.clubs[u.team];
+    const fp = club && club.trainFocus !== undefined && club.trainFocus !== null ? game.players[club.trainFocus] : null;
+    if (!fp || fp.club !== u.team) { if (club) club.trainFocus = null; continue; }
+    if (fp.inj > 0) continue;
+    fp.trainPts = (fp.trainPts || 0) + 1;
+    if (fp.trainPts >= 3 && (club.trainGained || 0) < 3 && fp.rating < 94) {
+      fp.trainPts = 0;
+      fp.rating++;
+      club.trainGained = (club.trainGained || 0) + 1;
+      fp.value = Math.max(fp.value, marketValue(fp.rating, fp.age, fp.pos));
+      log(game, `TRAINING: ${fp.name} (${u.team}) hits a new level after weeks of extra sessions. Now rated ${fp.rating}.`);
+    }
+  }
+  // board confidence moves with results against what the budget says you should do
+  for (const u of Object.values(game.users)) {
+    if (!u.team) continue;
+    const club = game.clubs[u.team];
+    if (club.conf === undefined) club.conf = 60;
+    const round = (game.leagueFixtures[club.league] || [])[game.round - 1] || [];
+    const m = round.find(x => x.home === u.team || x.away === u.team);
+    if (m && m.hg !== null) {
+      const myG = m.home === u.team ? m.hg : m.ag;
+      const opG = m.home === u.team ? m.ag : m.hg;
+      club.conf += myG > opG ? 3 : myG === opG ? 1 : -3;
+    }
+    const table = tableFor(game, club.league);
+    const pos = table.findIndex(r => r.team === u.team) + 1;
+    const budgetRank = leagueClubs(game, club.league)
+      .map(n => game.clubs[n])
+      .sort((a, b) => (b.baseBudget !== undefined ? b.baseBudget : b.budget) - (a.baseBudget !== undefined ? a.baseBudget : a.budget))
+      .findIndex(c => c.name === u.team) + 1;
+    if (pos > 0 && budgetRank > 0) {
+      if (pos <= budgetRank) club.conf += 1;
+      else if (pos > budgetRank + 5) club.conf -= 1;
+    }
+    club.conf = Math.max(5, Math.min(99, club.conf));
+    if (club.conf <= 20 && game.round % 6 === 0) log(game, `BOARD WATCH: pressure is building on ${u.name} at ${u.team}. The board expected better.`);
+  }
   const playedWeek = game.round;
   simCupsForWeek(game);
   aiInboundBids(game);
@@ -1022,6 +1197,7 @@ app.post("/api/offer", (req, res) => {
   const fee = Math.round(Number(req.body.fee) * 10) / 10;
   if (!p) return res.status(400).json({ error: "Player not found." });
   if (p.academy) return res.status(400).json({ error: "Academy players can't be bought. Their club has to promote them first." });
+  if (p.loanOwner) return res.status(400).json({ error: "He is on loan. His parent club won't sell him mid loan." });
   if (p.club === user.team) return res.status(400).json({ error: "He already plays for you." });
   if (!(fee > 0)) return res.status(400).json({ error: "Enter a fee." });
   if (fee > game.clubs[user.team].budget) return res.status(400).json({ error: "That bid is over your budget." });
@@ -1031,10 +1207,21 @@ app.post("/api/offer", (req, res) => {
     fee, week: game.round, direction: "outbound", buyerUser: user.name
   };
   const sellerHuman = humanOf(game, p.club);
+  if (req.body.swapId !== undefined && req.body.swapId !== null && req.body.swapId !== "") {
+    if (!sellerHuman) return res.status(400).json({ error: "Swap deals only work between real managers. AI clubs want cash." });
+    const sw = game.players[Number(req.body.swapId)];
+    if (!sw || sw.club !== user.team) return res.status(400).json({ error: "Pick one of your own players for the swap." });
+    if (sw.academy || sw.loanOwner) return res.status(400).json({ error: "That player can't go in a swap." });
+    if (sw.id === p.id) return res.status(400).json({ error: "You can't swap a player for himself." });
+    offer.swapId = sw.id;
+    offer.swapName = sw.name;
+    offer.swapRating = sw.rating;
+    offer.swapValue = sw.value;
+  }
   if (sellerHuman) {
     offer.status = "pending_seller";
-    log(game, `${user.team} have bid £${fee}m for ${p.name} (${p.club}).`);
-    romano(game, `🚨 EXCLUSIVE: ${user.team} have submitted an official bid for ${p.name}, around ${fmtFee(fee)} on the table. ${p.club} are now internally discussing the proposal. More to follow.`);
+    log(game, `${user.team} have bid £${fee}m${offer.swapName ? " plus " + offer.swapName : ""} for ${p.name} (${p.club}).`);
+    romano(game, `🚨 EXCLUSIVE: ${user.team} have submitted an official bid for ${p.name}, around ${fmtFee(fee)}${offer.swapName ? " plus " + offer.swapName + " in a proposed swap" : ""} on the table. ${p.club} are now internally discussing the proposal. More to follow.`);
   } else {
     resolveAiSellerOffer(game, offer);
   }
@@ -1136,8 +1323,154 @@ app.post("/api/list", (req, res) => {
   const { game, user } = ctx;
   const p = game.players[req.body.playerId];
   if (!p || p.club !== user.team || p.academy) return res.status(400).json({ error: "Not your player." });
+  if (p.loanOwner) return res.status(400).json({ error: "He is only here on loan, you can't list him." });
   p.listed = !p.listed;
   if (p.listed) log(game, `${p.name} has been transfer listed by ${user.team}.`);
+  save();
+  res.json({ ok: true });
+});
+
+// ---------- loans, training, staff, reactions ----------
+const STAFF = {
+  scout: { cost: 15, name: "Chief scout" },
+  youth: { cost: 20, name: "Youth coach" },
+  physio: { cost: 10, name: "Head physio" },
+  analyst: { cost: 10, name: "Match analyst" }
+};
+
+app.post("/api/loanout", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  if (!game.started) return res.status(400).json({ error: "Loans start with the season." });
+  if (!windowOpen(game)) return res.status(400).json({ error: "The window is shut. Loans need an open window." });
+  const p = game.players[Number(req.body.playerId)];
+  const club = game.clubs[user.team];
+  if (!p || p.club !== user.team || p.academy) return res.status(400).json({ error: "Not your player." });
+  if (p.loanOwner) return res.status(400).json({ error: "He is already involved in a loan." });
+  if (p.age > 23) return res.status(400).json({ error: "Loans out are for developing players, 23 and under." });
+  if (club.squad.length <= 15) return res.status(400).json({ error: "Your squad is too thin to loan anyone out." });
+  const targets = leagueClubs(game, club.league).filter(n => !humanOf(game, n) && n !== user.team && game.clubs[n].squad.length < 30);
+  if (!targets.length) return res.status(400).json({ error: "No club has room to take him right now." });
+  const to = targets[Math.floor(Math.random() * targets.length)];
+  const dest = game.clubs[to];
+  club.squad = club.squad.filter(id => id !== p.id);
+  stripFromLineup(club, p.id);
+  dest.squad.push(p.id);
+  p.loanOwner = user.team;
+  p.club = to;
+  p.league = dest.league;
+  p.listed = false;
+  if (club.trainFocus === p.id) club.trainFocus = null;
+  voidOtherOffers(game, p.id, -1);
+  log(game, `LOAN: ${p.name} (${p.age}) joins ${to} on loan from ${user.team} until the end of the season. He comes back sharper for the minutes.`);
+  romano(game, `\ud83d\udfe1 Loan deal done: ${p.name} moves to ${to} on a season long loan from ${user.team}. Development move, no option to buy.`);
+  save();
+  res.json({ ok: true });
+});
+
+app.post("/api/loanin", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  if (!game.started) return res.status(400).json({ error: "Loans start with the season." });
+  if (!windowOpen(game)) return res.status(400).json({ error: "The window is shut. Loans need an open window." });
+  const p = game.players[Number(req.body.playerId)];
+  const club = game.clubs[user.team];
+  if (!p || p.academy) return res.status(400).json({ error: "Player not found." });
+  if (p.club === user.team) return res.status(400).json({ error: "He already plays for you." });
+  if (humanOf(game, p.club)) return res.status(400).json({ error: "You can only loan from AI clubs. Talk to a real manager and buy instead." });
+  if (p.loanOwner) return res.status(400).json({ error: "He is already out on loan." });
+  const owner = game.clubs[p.club];
+  if (owner.squad.length <= 14) return res.status(400).json({ error: `${p.club} are too thin to let him go.` });
+  if (club.squad.length >= 30) return res.status(400).json({ error: "Squad is full (30 max)." });
+  const loansIn = club.squad.map(id => game.players[id]).filter(x => x && x.loanOwner && x.loanOwner !== user.team).length;
+  if (loansIn >= 3) return res.status(400).json({ error: "Three loans in per season is the limit." });
+  const fee = Math.max(1, Math.round(p.value * 0.1 * 10) / 10);
+  if (club.budget < fee) return res.status(400).json({ error: `The loan fee is £${fee}m and you don't have it.` });
+  club.budget = Math.round((club.budget - fee) * 10) / 10;
+  owner.budget = Math.round((owner.budget + fee) * 10) / 10;
+  owner.squad = owner.squad.filter(id => id !== p.id);
+  stripFromLineup(owner, p.id);
+  club.squad.push(p.id);
+  p.loanOwner = owner.name;
+  p.loanFee = fee;
+  p.club = user.team;
+  p.league = club.league;
+  p.listed = false;
+  voidOtherOffers(game, p.id, -1);
+  log(game, `LOAN: ${p.name} joins ${user.team} on loan from ${owner.name} for a £${fee}m fee, with an option to buy at value.`);
+  romano(game, `\ud83d\udfe1 Here we go, loan version: ${p.name} to ${user.team} on a season long deal! ${fmtFee(fee)} loan fee to ${owner.name}, option to buy included.`);
+  save();
+  res.json({ ok: true, fee });
+});
+
+app.post("/api/buyloan", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  if (!windowOpen(game)) return res.status(400).json({ error: "The window is shut. The option can be triggered once it reopens." });
+  const p = game.players[Number(req.body.playerId)];
+  const club = game.clubs[user.team];
+  if (!p || p.club !== user.team || !p.loanOwner || p.loanOwner === user.team) return res.status(400).json({ error: "That player is not on loan at your club." });
+  const owner = game.clubs[p.loanOwner];
+  const price = p.value;
+  if (club.budget < price) return res.status(400).json({ error: `The option to buy is his value, £${price}m. You don't have it.` });
+  club.budget = Math.round((club.budget - price) * 10) / 10;
+  if (owner) owner.budget = Math.round((owner.budget + price) * 10) / 10;
+  const from = p.loanOwner;
+  delete p.loanOwner;
+  delete p.loanFee;
+  log(game, `PERMANENT: ${user.team} trigger the option to buy on ${p.name}, £${price}m to ${from}.`);
+  romano(game, `🚨✅ HERE WE GO! ${user.team} make the ${p.name} loan PERMANENT. Option to buy triggered, ${fmtFee(price)} to ${from}. Loved it there, staying for good.`);
+  save();
+  res.json({ ok: true });
+});
+
+app.post("/api/train", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  const club = game.clubs[user.team];
+  const raw = req.body.playerId;
+  if (raw === null || raw === undefined || raw === "") { club.trainFocus = null; save(); return res.json({ ok: true }); }
+  const p = game.players[Number(raw)];
+  if (!p || p.club !== user.team || p.academy) return res.status(400).json({ error: "Not your player." });
+  club.trainFocus = p.id;
+  log(game, `${user.team} put ${p.name} on an individual training programme.`);
+  save();
+  res.json({ ok: true });
+});
+
+app.post("/api/staff", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  const key = req.body.key;
+  const def = STAFF[key];
+  if (!def) return res.status(400).json({ error: "No such staff role." });
+  const club = game.clubs[user.team];
+  club.staff = club.staff || {};
+  if (club.staff[key]) return res.status(400).json({ error: "You already employ a " + def.name.toLowerCase() + "." });
+  if (club.budget < def.cost) return res.status(400).json({ error: `A ${def.name.toLowerCase()} costs £${def.cost}m. You don't have it.` });
+  club.budget = Math.round((club.budget - def.cost) * 10) / 10;
+  club.staff[key] = true;
+  log(game, `${user.team} hire a ${def.name.toLowerCase()} for £${def.cost}m. The upgrade is permanent.`);
+  save();
+  res.json({ ok: true });
+});
+
+const REACTS = ["\ud83d\ude02", "\ud83d\udd25", "\ud83d\udc80", "\ud83d\udc4f", "\ud83e\udd21", "\ud83d\ude2d"];
+app.post("/api/react", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  const e = req.body.emoji;
+  if (!REACTS.includes(e)) return res.status(400).json({ error: "Pick one of the reactions." });
+  game.reacts = game.reacts || [];
+  const last = game.reacts[game.reacts.length - 1];
+  if (last && last.n === user.name && Date.now() - last.t < 1200) return res.json({ ok: true });
+  game.reacts.push({ n: user.name, e, t: Date.now() });
+  game.reacts = game.reacts.slice(-30);
   save();
   res.json({ ok: true });
 });
@@ -1183,8 +1516,21 @@ app.get("/api/state", (req, res) => {
       tactic: game.clubs[myTeam].tactic,
       lineup: game.clubs[myTeam].lineup || { xi: [], subs: [] },
       squad: game.clubs[myTeam].squad.map(id => game.players[id]).filter(Boolean),
-      academy: (game.clubs[myTeam].academy || []).map(id => game.players[id]).filter(Boolean)
+      academy: (game.clubs[myTeam].academy || []).map(id => game.players[id]).filter(Boolean),
+      staff: game.clubs[myTeam].staff || {},
+      trainFocus: game.clubs[myTeam].trainFocus !== undefined ? game.clubs[myTeam].trainFocus : null,
+      conf: game.clubs[myTeam].conf !== undefined ? game.clubs[myTeam].conf : 60
     } : null,
+    sacked: !!user.sacked,
+    staffPrices: { scout: 15, youth: 20, physio: 10, analyst: 10 },
+    lastEvents: game.lastEvents || {},
+    reacts: (game.reacts || []).slice(-30),
+    scoutTips: (myTeam && (game.clubs[myTeam].staff || {}).scout)
+      ? Object.values(game.players)
+          .filter(p => p.club !== myTeam && !p.academy && !p.loanOwner && p.age <= 21 && p.rating >= 79)
+          .sort((a, b) => b.rating - a.rating).slice(0, 5)
+          .map(p => ({ name: p.name, club: p.club, pos: p.pos, age: p.age, rating: p.rating, value: p.value }))
+      : null,
     myNation: user.nation || null,
     nations: Object.values(game.nations || {}).map(n => {
       const xi = nationXI(game, n.name);

@@ -236,6 +236,62 @@ tr.me td{background:rgba(255,180,36,.06)}
 .awardh{margin:0 0 6px;color:var(--gold);font-size:11px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.18em}
 
 
+
+/* ---------- staff strip ---------- */
+.staffcard{border:1px solid var(--line);background:var(--panel2);padding:11px 13px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.staffcard .sn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;text-transform:uppercase}
+.staffcard .sd{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--dim2);margin-top:2px;text-transform:uppercase}
+.staffcard.owned{border-color:var(--grass)}
+.staffcard.owned .sn{color:var(--grass)}
+
+/* ---------- player status tags ---------- */
+.tag.inj{border-color:var(--red);color:var(--red)}
+.tag.loan{border-color:#7fb2d9;color:#7fb2d9}
+.tag.train{border-color:var(--grass);color:var(--grass)}
+
+/* ---------- matchday reactions ---------- */
+.reactbar{display:flex;justify-content:center;gap:8px;padding:12px;border-bottom:1px solid var(--hair)}
+.reactbar button{background:var(--panel2);border:1px solid var(--line);font-size:19px;padding:7px 13px;font-style:normal;line-height:1}
+.reactbar button:hover{background:#1c231b;border-color:var(--gold)}
+.reactfeed{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;padding:0 14px 10px;border-bottom:1px solid var(--hair);min-height:20px}
+.reactfeed:empty{display:none}
+.reactchip{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:var(--dim);background:var(--panel2);border:1px solid var(--line);padding:3px 9px;text-transform:uppercase}
+.reactchip b{font-size:14px;margin-right:4px}
+
+/* ---------- trophy cabinet ---------- */
+.ctrophy-spin{width:150px;height:190px;perspective:700px}
+.ctrophy{width:100%;height:100%;position:relative;transform-style:preserve-3d;animation:ctspin 7s linear infinite, ctfloat 3.4s ease-in-out infinite alternate}
+@keyframes ctspin{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
+@keyframes ctfloat{from{margin-top:0}to{margin-top:-14px}}
+@media (prefers-reduced-motion: reduce){.ctrophy{animation:none}}
+.ct-bowl{position:absolute;left:50%;top:6px;width:104px;height:86px;transform:translateX(-50%);border-radius:8px 8px 60px 60px;background:linear-gradient(105deg,#8a5d0a 0%,#ffb424 30%,#ffe9a8 50%,#ffb424 68%,#8a5d0a 100%)}
+.ct-bowl::before,.ct-bowl::after{content:"";position:absolute;top:6px;width:34px;height:52px;border:7px solid #d99a1c;border-radius:50%}
+.ct-bowl::before{left:-30px;border-right-color:transparent}
+.ct-bowl::after{right:-30px;border-left-color:transparent}
+.ct-stem{position:absolute;left:50%;top:90px;width:18px;height:52px;transform:translateX(-50%);background:linear-gradient(105deg,#8a5d0a,#ffd061,#8a5d0a)}
+.ct-stem::before{content:"";position:absolute;left:50%;top:-7px;width:44px;height:12px;transform:translateX(-50%);background:linear-gradient(105deg,#8a5d0a,#ffcf5e,#8a5d0a)}
+.ct-base{position:absolute;left:50%;top:140px;width:92px;height:26px;transform:translateX(-50%);background:linear-gradient(105deg,#241b07,#6b4a08,#241b07);border-top:4px solid #d99a1c}
+.ct-base::after{content:"";position:absolute;left:50%;bottom:-12px;width:118px;height:12px;transform:translateX(-50%);background:#12150f;border:1px solid var(--bline)}
+.ctrophy.silver .ct-bowl{background:linear-gradient(105deg,#5a5f63 0%,#c8cdd2 30%,#f4f6f8 50%,#c8cdd2 68%,#5a5f63 100%)}
+.ctrophy.silver .ct-bowl::before,.ctrophy.silver .ct-bowl::after{border-color:#aeb4ba;border-right-color:transparent}
+.ctrophy.silver .ct-bowl::after{border-left-color:transparent;border-right-color:#aeb4ba}
+.ctrophy.silver .ct-stem{background:linear-gradient(105deg,#5a5f63,#e7eaee,#5a5f63)}
+.ctrophy.small{transform:scale(.52);transform-origin:top center}
+
+#cabRoom{position:fixed;inset:0;z-index:60;background:radial-gradient(ellipse at 50% -20%, #17200f 0%, var(--night) 60%);overflow:auto}
+.cabtop{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line);max-width:1100px;margin:0 auto}
+.cabtop h2{font-size:clamp(26px,5vw,38px);font-style:italic}
+.cabtop h2 span{color:var(--gold)}
+#cabStage{max-width:1100px;margin:0 auto;height:min(56vh,520px);cursor:grab;touch-action:none}
+#cabStage:active{cursor:grabbing}
+#cabStage canvas{display:block;width:100%;height:100%}
+#cabShelf{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.cabitem{background:var(--screen);padding:14px;text-align:center}
+.cabitem .ci-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16.5px;text-transform:uppercase;line-height:1.15}
+.cabitem .ci-season{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.2em;color:var(--gold);margin-top:4px}
+.cabitem .ci-extra{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--faint);margin-top:2px;text-transform:uppercase}
+.cabitem .mini{width:64px;height:82px;margin:0 auto 10px;position:relative;transform:scale(.52);transform-origin:top left;left:calc(50% - 33px)}
+
 /* ---------- nations ---------- */
 .teamcard{border:1px solid var(--line);background:var(--panel2);padding:13px 15px}
 .teamcard.me{border-color:var(--gold)}
@@ -312,6 +368,7 @@ tr.me td{background:rgba(255,180,36,.06)}
         <div class="statblk"><div class="k">Position</div><div class="v" id="stPos">-</div></div>
         <div class="statblk"><div class="k">Points</div><div class="v" id="stPts">-</div></div>
         <div class="statblk"><div class="k">Squad</div><div class="v gold" id="stSquad">-</div></div>
+        <div class="statblk"><div class="k">Board</div><div class="v" id="stBoard">-</div></div>
       </div>
     </div>
 
@@ -346,12 +403,14 @@ tr.me td{background:rgba(255,180,36,.06)}
       <button data-t="calendar">Calendar</button>
       <button data-t="cups">Cups</button>
       <button data-t="table">Tables</button>
+      <button data-t="cabinet">Cabinet</button>
       <button data-t="academy">Academy</button>
       <button data-t="nations">Nations</button>
       <button data-t="feed">News feed</button>
     </nav>
 
     <section id="tab-squad" class="panel">
+      <div id="staffStrip" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px"></div>
       <div class="controls">
         <h3 style="margin-right:auto">Squad</h3>
         <label style="color:var(--dim);font-size:13px">Tactic</label>
@@ -475,11 +534,23 @@ tr.me td{background:rgba(255,180,36,.06)}
       <div id="calBox" class="calgrid"></div>
     </section>
 
+    <section id="tab-cabinet" class="panel hidden">
+      <div class="mlab">TROPHY CABINET</div>
+      <div id="cabHero" style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:30px 0 20px">
+        <div class="ctrophy-spin"><div class="ctrophy"><span class="ct-bowl"></span><span class="ct-stem"></span><span class="ct-base"></span></div></div>
+        <div class="msub" id="cabCount" style="letter-spacing:.3em">NO SILVERWARE YET</div>
+        <button id="cabEnter" class="gold">ENTER THE CABINET &rarr;</button>
+        <p style="color:var(--dim2);font-size:13px;max-width:480px;text-align:center">Every trophy your club lifts and every individual award your players win ends up in here, season after season. Win something.</p>
+      </div>
+      <div id="cabList" style="margin-top:8px"></div>
+    </section>
+
     <section id="tab-academy" class="panel hidden">
       <div class="controls"><h3 style="margin-right:auto">Youth academy</h3></div>
       <p style="color:var(--dim);font-size:12px">Homegrown kids come through every season. Promote the good ones to your first team before they turn 20, or they get released. Star shows how close they are to their potential.</p>
       <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rating</th><th class="num">Potential</th><th></th></tr></thead>
       <tbody id="academyBody"></tbody></table>
+      <div id="scoutBox" style="margin-top:14px"></div>
       <div class="msg" id="academyMsg"></div>
     </section>
 
@@ -496,6 +567,19 @@ tr.me td{background:rgba(255,180,36,.06)}
     </section>
   </div>
 
+  <div id="cabRoom" class="hidden">
+    <div class="cabtop">
+      <h2>THE <span>CABINET</span></h2>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span class="msub" id="cabRoomCount"></span>
+        <button id="cabClose" class="ghost small">CLOSE &times;</button>
+      </div>
+    </div>
+    <div id="cabStage"></div>
+    <div id="cabShelf"></div>
+    <p class="msub" style="text-align:center;padding:10px 0 26px;letter-spacing:.24em">DRAG TO LOOK AROUND &middot; EVERY PIECE SPINS FOREVER</p>
+  </div>
+
   <div id="matchday" class="hidden">
     <div class="inner">
       <div class="mdtop">
@@ -503,6 +587,9 @@ tr.me td{background:rgba(255,180,36,.06)}
         <div class="mdlock"><span class="pulse red"></span><span>LOCKED &middot; FULL TIME EVERYWHERE</span></div>
       </div>
       <div class="mdhero hidden" id="mdHero"></div>
+      <div id="mdScorers" class="msub hidden" style="text-align:center;padding:10px 14px;border-bottom:1px solid var(--hair);letter-spacing:.18em;line-height:2"></div>
+      <div class="reactbar" id="reactBar"></div>
+      <div id="reactFeed" class="reactfeed"></div>
       <p class="sub" id="mdSub"></p>
       <div class="panel"><div class="mlab" id="mdLeagueLab">LEAGUE RESULTS</div><div id="mdLeague" style="margin-top:8px"></div></div>
       <div class="panel hidden" id="mdCupsPanel"><div class="mlab">CUP ACTION</div><div id="mdCups" style="margin-top:8px"></div></div>
@@ -559,6 +646,189 @@ function leave(){
 }
 $("leaveBtn").onclick = leave;
 
+// ---- trophy cabinet ----
+function myTrophies(s) {
+  const out = [];
+  if (!s) return out;
+  const me = s.myClub ? s.myClub.name : null;
+  (s.history || []).forEach(h => {
+    Object.entries(h.champions || {}).forEach(([lg, team]) => {
+      if (me && team === me) out.push({ type: "league", name: lg + " Champions", season: h.season });
+    });
+    Object.entries(h.cupWinners || {}).forEach(([k, c]) => {
+      if (!c || !c.winner) return;
+      if (me && c.winner === me) out.push({ type: k, name: c.title, season: h.season });
+      else if (s.myNation && c.winner === s.myNation && k === "intl") out.push({ type: "intl", name: c.title + " (" + s.myNation + ")", season: h.season });
+    });
+    Object.entries(h.awards || {}).forEach(([lg, a]) => {
+      if (!a || !me) return;
+      [["boot", "Golden Boot"], ["ball", "Golden Ball"], ["pots", "Player of the Season"]].forEach(([kk, label]) => {
+        const w = a[kk];
+        if (w && w.club === me) out.push({ type: kk, name: label, season: h.season, extra: w.name });
+      });
+    });
+  });
+  return out.sort((a, b) => b.season - a.season);
+}
+const TROPHY_SILVER = new Set(["uel", "uecl", "pots"]);
+function miniTrophy(type) {
+  return `<div class="mini"><div class="ctrophy small ${TROPHY_SILVER.has(type) ? "silver" : ""}" style="animation:none;width:128px;height:158px"><span class="ct-bowl"></span><span class="ct-stem"></span><span class="ct-base"></span></div></div>`;
+}
+function renderCabinet(s) {
+  if (!$("cabCount")) return;
+  const tr = myTrophies(s);
+  $("cabCount").textContent = tr.length ? tr.length + " PIECE" + (tr.length > 1 ? "S" : "") + " OF SILVERWARE" : "NO SILVERWARE YET";
+  $("cabList").innerHTML = tr.length
+    ? `<div id="cabGridSmall" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1px;background:var(--hair);border:1px solid var(--hair)">` +
+      tr.map(t => `<div class="cabitem">${miniTrophy(t.type)}<div class="ci-name">${t.name}</div><div class="ci-season">SEASON ${t.season}</div>${t.extra ? `<div class="ci-extra">${t.extra}</div>` : ""}</div>`).join("") + "</div>"
+    : "";
+}
+let CAB = { anim: 0, renderer: null, drag: null };
+function closeCabinet() {
+  $("cabRoom").classList.add("hidden");
+  if (CAB.anim) cancelAnimationFrame(CAB.anim);
+  CAB.anim = 0;
+  if (CAB.renderer) { try { CAB.renderer.dispose(); } catch (e) {} CAB.renderer = null; }
+  $("cabStage").innerHTML = "";
+}
+$("cabClose").onclick = closeCabinet;
+$("cabEnter").onclick = () => {
+  const tr = myTrophies(STATE);
+  $("cabRoom").classList.remove("hidden");
+  $("cabRoomCount").textContent = tr.length ? tr.length + " PIECES ON DISPLAY" : "EMPTY. WIN SOMETHING.";
+  $("cabShelf").innerHTML = tr.map(t =>
+    `<div class="cabitem">${miniTrophy(t.type)}<div class="ci-name">${t.name}</div><div class="ci-season">SEASON ${t.season}</div>${t.extra ? `<div class="ci-extra">${t.extra}</div>` : ""}</div>`).join("");
+  const boot3d = () => cab3d(tr);
+  if (window.THREE) boot3d();
+  else {
+    const sc = document.createElement("script");
+    sc.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+    sc.onload = boot3d;
+    sc.onerror = () => cabFallback(tr);
+    document.head.appendChild(sc);
+  }
+};
+function cabFallback(tr) {
+  $("cabStage").innerHTML = `<div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+    <div class="ctrophy-spin"><div class="ctrophy"><span class="ct-bowl"></span><span class="ct-stem"></span><span class="ct-base"></span></div></div>
+    <span class="msub">${tr.length ? "THE FULL COLLECTION IS BELOW" : "THE SHELVES ARE WAITING"}</span></div>`;
+}
+function trophyMesh(type) {
+  const gold = 0xffb424, silver = 0xcfd4d9, bronze = 0xc07840, dark = 0x8a5d0a;
+  const mat = c => new THREE.MeshStandardMaterial({ color: c, metalness: 0.85, roughness: 0.28 });
+  const g = new THREE.Group();
+  const color = TROPHY_SILVER.has(type) ? silver : type === "uecl" ? bronze : gold;
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.65, 0.22, 24), new THREE.MeshStandardMaterial({ color: 0x1c1408, metalness: 0.4, roughness: 0.6 }));
+  base.position.y = 0.11;
+  g.add(base);
+  const trim = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.55, 0.06, 24), mat(dark));
+  trim.position.y = 0.25;
+  g.add(trim);
+  if (type === "intl") {
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(0.52, 24, 18), mat(color));
+    globe.position.y = 0.95;
+    g.add(globe);
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, 0.5, 16), mat(color));
+    stem.position.y = 0.45;
+    g.add(stem);
+  } else if (type === "boot" || type === "ball" || type === "pots") {
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.13, 0.55, 16), mat(color));
+    stem.position.y = 0.5;
+    g.add(stem);
+    const top = type === "ball"
+      ? new THREE.Mesh(new THREE.SphereGeometry(0.34, 20, 16), mat(color))
+      : type === "pots"
+      ? new THREE.Mesh(new THREE.OctahedronGeometry(0.38), mat(color))
+      : new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.24, 0.26), mat(color));
+    top.position.y = type === "boot" ? 0.92 : 1.05;
+    if (type === "boot") top.rotation.z = 0.28;
+    g.add(top);
+  } else {
+    const profile = [];
+    const tall = type === "league" || type === "libertadores";
+    const wide = type === "ucl";
+    const H = tall ? 1.45 : 1.2, W = wide ? 0.62 : 0.5;
+    [[0.16, 0.28], [0.09, 0.34], [0.11, 0.62], [W * 0.72, 0.95], [W, H + 0.12], [W * 0.86, H + 0.22]].forEach(([r, y]) => profile.push(new THREE.Vector2(r, y)));
+    const cup = new THREE.Mesh(new THREE.LatheGeometry(profile, 26), mat(color));
+    cup.material.side = THREE.DoubleSide;
+    g.add(cup);
+    if (type !== "league" && type !== "libertadores") {
+      const earR = wide ? 0.42 : 0.26;
+      const t1 = new THREE.Mesh(new THREE.TorusGeometry(earR, 0.05, 10, 22), mat(color));
+      t1.position.set(-(W + earR * 0.6), H * 0.72, 0);
+      const t2 = t1.clone();
+      t2.position.x = W + earR * 0.6;
+      g.add(t1); g.add(t2);
+    }
+  }
+  return g;
+}
+function cab3d(tr) {
+  try {
+    const stage = $("cabStage");
+    stage.innerHTML = "";
+    const wPx = stage.clientWidth || 900, hPx = stage.clientHeight || 480;
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(wPx, hPx);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    stage.appendChild(renderer.domElement);
+    CAB.renderer = renderer;
+    const scene = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(42, wPx / hPx, 0.1, 100);
+    scene.add(new THREE.AmbientLight(0xfff2d8, 0.55));
+    const spot = new THREE.SpotLight(0xffd580, 1.15);
+    spot.position.set(4, 9, 7);
+    scene.add(spot);
+    const rim = new THREE.DirectionalLight(0x8899ff, 0.25);
+    rim.position.set(-6, 4, -4);
+    scene.add(rim);
+    const room = new THREE.Group();
+    scene.add(room);
+    const items = tr.length ? tr : [{ type: "league", empty: true }];
+    const perRow = Math.min(6, Math.max(3, Math.ceil(Math.sqrt(items.length))));
+    const spinners = [];
+    items.forEach((t, i) => {
+      const row = Math.floor(i / perRow), col = i % perRow;
+      const rowCount = Math.min(perRow, items.length - row * perRow);
+      const m = trophyMesh(t.type);
+      if (t.empty) m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = 0.18; } });
+      m.position.set((col - (rowCount - 1) / 2) * 2.1, -row * 2.4, -row * 1.6);
+      const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.14, 1.5),
+        new THREE.MeshStandardMaterial({ color: 0x141a10, metalness: 0.15, roughness: 0.85 }));
+      shelf.position.set(m.position.x, m.position.y - 0.08, m.position.z);
+      room.add(shelf);
+      room.add(m);
+      spinners.push(m);
+    });
+    const rows = Math.ceil(items.length / perRow);
+    room.position.y = (rows - 1) * 1.2;
+    cam.position.set(0, 1.6, 6.4 + rows * 1.4 + Math.max(0, perRow - 4) * 0.8);
+    cam.lookAt(0, 0.8, 0);
+    let targetY = 0, curY = 0, dragX = null;
+    const pd = e => { dragX = (e.touches ? e.touches[0].clientX : e.clientX); };
+    const pm = e => {
+      if (dragX === null) return;
+      const x = (e.touches ? e.touches[0].clientX : e.clientX);
+      targetY += (x - dragX) * 0.006;
+      targetY = Math.max(-0.9, Math.min(0.9, targetY));
+      dragX = x;
+    };
+    const pu = () => { dragX = null; };
+    stage.addEventListener("mousedown", pd); stage.addEventListener("mousemove", pm); window.addEventListener("mouseup", pu);
+    stage.addEventListener("touchstart", pd, { passive: true }); stage.addEventListener("touchmove", pm, { passive: true }); stage.addEventListener("touchend", pu);
+    const loop = () => {
+      spinners.forEach((m, i) => { m.rotation.y += 0.008 + (i % 3) * 0.002; });
+      curY += (targetY - curY) * 0.08;
+      room.rotation.y = curY;
+      renderer.render(scene, cam);
+      CAB.anim = requestAnimationFrame(loop);
+    };
+    loop();
+  } catch (e) {
+    cabFallback(tr);
+  }
+}
+
 // ---- tabs ----
 document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
   document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));
@@ -597,6 +867,12 @@ function render() {
   const ordn = n => { const v = n % 100; return n + (["th","st","nd","rd"][(v - 20) % 10] || ["th","st","nd","rd"][v] || "th"); };
   if ($("stPos")) $("stPos").textContent = hubIdx >= 0 ? ordn(hubIdx + 1) : "-";
   if ($("stPts")) $("stPts").textContent = hubIdx >= 0 ? hubTbl[hubIdx].pts : "-";
+  if ($("stBoard")) {
+    const cf = s.myClub ? s.myClub.conf : null;
+    $("stBoard").textContent = cf === null ? "-" : cf + "%";
+    $("stBoard").className = "v " + (cf === null ? "" : cf >= 60 ? "green" : cf >= 40 ? "" : "red");
+    $("stBoard").title = "Board confidence. Win games and silverware to keep it up. Under 25 at the end of a season and you are sacked.";
+  }
 
   renderMatchday(s);
 
@@ -609,8 +885,30 @@ function render() {
   Object.values(s.clubsByLeague || {}).forEach(list => list.forEach(t => MANAGERS[t.name] = t.manager));
 
   // pre start
-  $("preStart").classList.toggle("hidden", s.started);
-  if (!s.started) {
+  const needsClub = s.started && !s.myClub;
+  $("preStart").classList.toggle("hidden", s.started && !needsClub);
+  if (needsClub) {
+    $("startBtn").classList.add("hidden");
+    if ($("codeBoxes")) $("codeBoxes").innerHTML = (s.code || "").split("").map(c => `<div class="codebox">${c}</div>`).join("");
+    $("pickMsg").textContent = s.sacked
+      ? "You were sacked. Pick a free club and rebuild your reputation."
+      : "The world is already running. Pick a free club to jump in.";
+    if ($("pickLeague").options.length === 0) {
+      s.leagues.forEach(l => { const o = document.createElement("option"); o.textContent = l; $("pickLeague").appendChild(o); });
+      $("pickLeague").onchange = render;
+    }
+    const pl2 = $("pickLeague").value || s.leagues[0];
+    $("teamPick").innerHTML = (s.clubsByLeague[pl2] || []).map(t => {
+      const taken = t.manager !== "AI";
+      return `<button class="${taken?'taken':''}" ${taken?'disabled':''} onclick="pick('${t.name.replace(/'/g, "\\'")}')">${t.name}<br><span style="font-size:11px;color:var(--dim)">${money(t.budget)} \u00b7 ${taken?t.manager:'Free'}</span></button>`;
+    }).join("");
+    if ($("mgrCount")) $("mgrCount").textContent = "MANAGERS \u00b7 " + s.users.length;
+    $("lobbyList").innerHTML = s.users.map((u, i) =>
+      `<div class="mgrow"><span class="n">${String(i + 1).padStart(2, "0")}</span>
+        <div><div class="nm">${u.name}</div><div class="cl">${u.team ? u.team : "OUT OF WORK"}</div></div>
+        ${u.name === s.you ? '<span class="tag human">YOU</span>' : ''}</div>`).join("");
+  }
+  else if (!s.started) {
     if ($("pickLeague").options.length === 0) {
       s.leagues.forEach(l => { const o = document.createElement("option"); o.textContent = l; $("pickLeague").appendChild(o); });
       $("pickLeague").onchange = render;
@@ -643,11 +941,41 @@ function render() {
     else if (ss === "ageasc") sq.sort((a,b)=>a.age-b.age || b.rating-a.rating);
     else if (ss === "agedesc") sq.sort((a,b)=>b.age-a.age || b.rating-a.rating);
     else sq.sort((a,b)=>b.rating-a.rating);
-    $("squadBody").innerHTML = sq.map(p => `
-      <tr><td>${p.name} ${p.listed?'<span class="tag listed">Listed</span>':''}</td>
+    $("squadBody").innerHTML = sq.map(p => {
+      const onLoanHere = p.loanOwner && p.loanOwner !== s.myClub.name;
+      const tags = [
+        p.listed ? '<span class="tag listed">Listed</span>' : '',
+        p.inj > 0 ? `<span class="tag inj">INJ ${p.inj}W</span>` : '',
+        p.ban > 0 ? '<span class="tag inj">BAN</span>' : '',
+        onLoanHere ? `<span class="tag loan">LOAN \u00b7 ${p.loanOwner}</span>` : '',
+        s.myClub.trainFocus === p.id ? '<span class="tag train">TRAINING</span>' : ''
+      ].join(" ");
+      const acts = onLoanHere
+        ? `<button class="small" onclick="buyLoan(${p.id})" title="Make it permanent at his value">Buy ${money(p.value)}</button>`
+        : `<button class="small ghost" onclick="toggleList(${p.id})">${p.listed?'Unlist':'List'}</button>
+           <button class="small ghost" onclick="setTrain(${s.myClub.trainFocus === p.id ? "null" : p.id})">${s.myClub.trainFocus === p.id ? "Stop" : "Train"}</button>
+           ${p.age <= 23 ? `<button class="small ghost" onclick="loanOut(${p.id})">Loan out</button>` : ""}`;
+      return `
+      <tr><td>${p.name} ${tags}</td>
       <td class="pos-${p.pos}">${p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
       <td class="num">${money(p.value)}</td>
-      <td><button class="small ghost" onclick="toggleList(${p.id})">${p.listed?'Unlist':'List'}</button></td></tr>`).join("");
+      <td style="white-space:nowrap">${acts}</td></tr>`;
+    }).join("");
+    const staffDefs = [
+      { key: "scout", name: "Chief scout", blurb: "Weekly report on the best young talent" },
+      { key: "youth", name: "Youth coach", blurb: "Better academy kids every intake" },
+      { key: "physio", name: "Head physio", blurb: "Injuries heal in half the time" },
+      { key: "analyst", name: "Match analyst", blurb: "A sharper game plan at home" }
+    ];
+    if ($("staffStrip")) $("staffStrip").innerHTML = staffDefs.map(d => {
+      const owned = (s.myClub.staff || {})[d.key];
+      const price = (s.staffPrices || {})[d.key] || 0;
+      return `<div class="staffcard ${owned?'owned':''}">
+        <div><div class="sn">${d.name}</div><div class="sd">${d.blurb}</div></div>
+        ${owned ? '<span class="tag" style="border-color:var(--grass);color:var(--grass)">HIRED</span>'
+                : `<button class="small" onclick="hireStaff('${d.key}')">Hire ${money(price)}</button>`}
+      </div>`;
+    }).join("");
   }
 
   // lineup
@@ -752,7 +1080,20 @@ function render() {
       <td class="num">${p.rating}</td><td class="num">${p.pot || "?"}</td>
       <td><button class="small" onclick="promote(${p.id})">Promote</button></td></tr>`).join("") ||
       "<tr><td colspan='6' style='color:var(--dim)'>No academy players right now. A new intake arrives every season.</td></tr>";
+    if ($("scoutBox")) {
+      if (s.scoutTips) {
+        $("scoutBox").innerHTML = `<div class="mlab">SCOUT REPORT \u00b7 BEST YOUNG TALENT ON THE MARKET</div>
+          <table style="margin-top:8px"><thead><tr><th>Player</th><th>Club</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th class="num">Value</th></tr></thead><tbody>` +
+          s.scoutTips.map(p => `<tr><td>${p.name}</td><td>${p.club}</td><td class="pos-${p.pos}">${p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td><td class="num">${money(p.value)}</td></tr>`).join("") +
+          `</tbody></table>`;
+      } else {
+        $("scoutBox").innerHTML = `<p style="color:var(--faint);font-size:12.5px">Hire a chief scout (Squad tab) and a weekly report on the best young talent in the world lands here.</p>`;
+      }
+    }
   }
+
+  // cabinet tab
+  renderCabinet(s);
 
   // nations
   renderNations(s);
@@ -791,7 +1132,7 @@ function offerCard(o, role) {
   const feeTag = (o.status === "countered" && o.counterFee) ? "THEIR COUNTER" : "BID";
   return `<div class="offer"><div class="ohead"><span class="who">${who}</span>
     <span class="msub status-${o.status}">${o.status.replace(/_/g," ").toUpperCase()}</span></div>
-    <div class="fee">${money(shownFee)} <small>${feeTag}${o.status === "countered" && o.counterFee ? " · YOUR BID " + money(o.fee) : ""}</small></div>
+    <div class="fee">${money(shownFee)} <small>${feeTag}${o.swapName ? " + " + o.swapName.toUpperCase() + " (" + o.swapRating + ")" : ""}${o.status === "countered" && o.counterFee ? " · YOUR BID " + money(o.fee) : ""}</small></div>
     ${o.note?`<div class="note">"${o.note}"</div>`:""}
     <div class="oact">${actions}</div></div>`;
 }
@@ -845,6 +1186,8 @@ function luTouch(msg) { LB.dirty = true; $("lineupMsg").textContent = msg || "Un
 
 function luAssign(slotIdx, id) {
   const p = luPlayer(id); if (!p) return;
+  if (p.inj > 0) { $("lineupMsg").textContent = p.name + " is injured for " + p.inj + " more week" + (p.inj > 1 ? "s" : "") + "."; return; }
+  if (p.ban > 0) { $("lineupMsg").textContent = p.name + " is suspended for the next match."; return; }
   const slot = FORMATIONS[LB.formation][slotIdx];
   if (slot.gk && p.pos !== "GK") { $("lineupMsg").textContent = "Only a goalkeeper can go in goal."; return; }
   if (!slot.gk && p.pos === "GK") { $("lineupMsg").textContent = "A keeper can only play in goal."; return; }
@@ -911,11 +1254,16 @@ function renderLineup() {
   const pool = s.myClub.squad
     .filter(p => !LB.xi.includes(p.id) && !LB.subs.includes(p.id))
     .sort((a, b) => ({GK:0,DF:1,MF:2,FW:3}[a.pos] - {GK:0,DF:1,MF:2,FW:3}[b.pos]) || b.rating - a.rating);
-  $("poolList").innerHTML = pool.map(p =>
-    `<div class="benchrow${LB.sel === p.id ? " sel" : ""}" draggable="true" ondragstart="luDrag(event,${p.id})"
-      onclick="luPoolTap(${p.id})"><span class="bp pos-${p.pos}">${p.pos}</span>
+  $("poolList").innerHTML = pool.map(p => {
+    const out = p.inj > 0 || p.ban > 0;
+    const acts = out
+      ? `<span class="tag inj">${p.inj > 0 ? "INJ " + p.inj + "W" : "BAN"}</span>`
+      : `<button class="small" onclick="luQuickStart(${p.id},event)">Start</button><button class="small ghost" onclick="luBench(${p.id},event)">Sub</button>`;
+    return `<div class="benchrow${LB.sel === p.id ? " sel" : ""}${out ? "" : ""}" ${out ? "" : 'draggable="true"'} ondragstart="luDrag(event,${p.id})"
+      onclick="${out ? "" : "luPoolTap(" + p.id + ")"}" style="${out ? "opacity:.5" : ""}"><span class="bp pos-${p.pos}">${p.pos}</span>
       <span class="bn">${p.name} <span>${p.age}Y</span> <b>${p.rating}</b></span>
-      <span class="ba"><button class="small" onclick="luQuickStart(${p.id},event)">Start</button><button class="small ghost" onclick="luBench(${p.id},event)">Sub</button></span></div>`).join("") ||
+      <span class="ba">${acts}</span></div>`;
+  }).join("") ||
     "<p style='color:var(--dim);font-size:13px;padding:6px 18px'>Everyone is in the matchday squad.</p>";
   $("subCount").textContent = LB.subs.length + "/9";
   $("subList").innerHTML = LB.subs.map(id => {
@@ -927,6 +1275,7 @@ function renderLineup() {
 }
 
 window.luDrag = (ev, id) => { ev.dataTransfer.setData("text/plain", String(id)); };
+const luAvail = id => { const p = luPlayer(id); return p && !(p.inj > 0) && !(p.ban > 0); };
 window.luSetFormation = f => {
   if (!FORMATIONS[f]) return;
   $("formSel").value = f;
@@ -1055,7 +1404,29 @@ function renderMatchday(s) {
         </div>
         <div class="tm${homeMine ? " away" : ""}">${mm.away}</div>`;
       hero.classList.remove("hidden");
-    } else hero.classList.add("hidden");
+      const evd = (s.lastEvents || {})[mm.home + "|" + mm.away];
+      const sc = $("mdScorers");
+      if (sc) {
+        if (evd && (evd.ev.length || evd.potm)) {
+          const line = evd.ev.map(e => `${e.n.toUpperCase()} ${e.min}'`).join(" \u00b7 ") || "NO GOALS";
+          const star = evd.potm ? `<span style="color:var(--gold)">STAR MAN: ${evd.potm.n.toUpperCase()} (${evd.potm.c.toUpperCase()})</span>` : "";
+          sc.innerHTML = line + (star ? "<br>" + star : "");
+          sc.classList.remove("hidden");
+        } else sc.classList.add("hidden");
+      }
+    } else {
+      hero.classList.add("hidden");
+      if ($("mdScorers")) $("mdScorers").classList.add("hidden");
+    }
+  }
+  if ($("reactBar")) {
+    if (!$("reactBar").innerHTML) {
+      $("reactBar").innerHTML = ["\ud83d\ude02","\ud83d\udd25","\ud83d\udc80","\ud83d\udc4f","\ud83e\udd21","\ud83d\ude2d"]
+        .map(e => `<button onclick="sendReact('${e}')" title="Let the lobby know">${e}</button>`).join("");
+    }
+    const rf = $("reactFeed");
+    if (rf) rf.innerHTML = (s.reacts || []).slice(-12).reverse()
+      .map(x => `<span class="reactchip"><b>${x.e}</b>${x.n}</span>`).join("");
   }
   $("mdLeague").innerHTML = (s.lastWeek||[]).map(m => {
     const mine = myName && (m.home === myName || m.away === myName);
@@ -1222,6 +1593,28 @@ function renderCalendar(s) {
 }
 
 // ---- actions ----
+window.setTrain = async id => {
+  try { await api("/api/train", { playerId: id }); tick(); } catch (e) { alert(e.message); }
+};
+window.loanOut = async id => {
+  if (!confirm("Loan him to an AI club in your league for the season? He comes back a better player.")) return;
+  try { await api("/api/loanout", { playerId: id }); tick(); } catch (e) { alert(e.message); }
+};
+window.loanIn = async (id, name) => {
+  if (!confirm("Take " + name + " on a season long loan? Fee is a tenth of his value, option to buy included.")) return;
+  try { const j = await api("/api/loanin", { playerId: id }); $("marketMsg").textContent = "Loan done, £" + j.fee + "m fee. He goes back at the end of the season unless you buy."; tick(); }
+  catch (e) { $("marketMsg").textContent = e.message; }
+};
+window.buyLoan = async id => {
+  if (!confirm("Trigger the option to buy at his full value?")) return;
+  try { await api("/api/buyloan", { playerId: id }); tick(); } catch (e) { alert(e.message); }
+};
+window.hireStaff = async key => {
+  try { await api("/api/staff", { key }); tick(); } catch (e) { alert(e.message); }
+};
+window.sendReact = async e => {
+  try { await api("/api/react", { emoji: e }); tick(); } catch (err) {}
+};
 window.promote = async id => {
   try { await api("/api/promote",{playerId:id}); $("academyMsg").textContent = "Promoted to the first team."; tick(); }
   catch(e){ $("academyMsg").textContent = e.message; }
@@ -1250,10 +1643,21 @@ window.respond = async (id, action, counterFee) => {
   try { await api("/api/respond",{offerId:id, action, counterFee}); tick(); }
   catch(e){ $("offerMsg").textContent = e.message; }
 };
-window.bid = async (id, asking) => {
+window.bid = async (id, asking, humanSeller) => {
   const fee = prompt("Your bid in £m (asking around " + asking + ")");
   if (!fee) return;
-  try { const j = await api("/api/offer",{playerId:id, fee}); $("marketMsg").textContent = j.offer.note || "Bid sent. Check the Offers tab."; tick(); }
+  let swapId = null;
+  if (humanSeller && STATE && STATE.myClub && confirm("Add one of your players to sweeten the deal? (a swap)")) {
+    const options = STATE.myClub.squad.filter(p => !p.loanOwner && Number(p.id) !== Number(id));
+    const swapName = prompt("Type the player's name to include:\n" + options.map(p => p.name + " (" + p.rating + ")").join("\n"));
+    if (swapName) {
+      const found = options.find(p => p.name.toLowerCase() === swapName.trim().toLowerCase()) ||
+        options.find(p => p.name.toLowerCase().includes(swapName.trim().toLowerCase()));
+      if (!found) { $("marketMsg").textContent = "No player of yours matches that name, bid not sent."; return; }
+      swapId = found.id;
+    }
+  }
+  try { const j = await api("/api/offer",{playerId:id, fee, swapId}); $("marketMsg").textContent = j.offer.note || "Bid sent. Check the Offers tab."; tick(); }
   catch(e){ $("marketMsg").textContent = e.message; }
 };
 
@@ -1270,11 +1674,19 @@ async function loadMarket() {
     else if (sort === "agedesc") j.players.sort((a,b)=>b.age-a.age || b.rating-a.rating);
     else j.players.sort((a,b)=>b.rating-a.rating);
     const open = STATE && STATE.window ? STATE.window.open : true;
-    $("marketBody").innerHTML = j.players.map(p => `
-      <tr><td>${p.name} ${p.humanOwned?'<span class="tag human">Human club</span>':''} ${p.listed?'<span class="tag listed">Listed</span>':''}</td>
+    $("marketBody").innerHTML = j.players.map(p => {
+      const onLoan = !!p.loanOwner;
+      let acts;
+      if (!open) acts = '<span class="tag">Window shut</span>';
+      else if (onLoan) acts = '<span class="tag loan">On loan</span>';
+      else acts = `<button class="small" onclick="bid(${p.id}, ${p.asking}, ${p.humanOwned ? "true" : "false"})">Bid</button>` +
+        (p.humanOwned ? "" : ` <button class="small ghost" onclick="loanIn(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Loan</button>`);
+      return `
+      <tr><td>${p.name} ${p.humanOwned?'<span class="tag human">Human club</span>':''} ${p.listed?'<span class="tag listed">Listed</span>':''} ${onLoan?'<span class="tag loan">Loan</span>':''}</td>
       <td>${p.club}</td><td class="pos-${p.pos}">${p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
       <td class="num">${money(p.value)}</td><td class="num">${money(p.asking)}</td>
-      <td>${open ? `<button class="small" onclick="bid(${p.id}, ${p.asking})">Bid</button>` : '<span class="tag">Window shut</span>'}</td></tr>`).join("");
+      <td style="white-space:nowrap">${acts}</td></tr>`;
+    }).join("");
     if (!open) $("marketMsg").textContent = STATE.window.label + ". You can browse but not bid.";
   } catch(e){ $("marketMsg").textContent = e.message; }
 }
