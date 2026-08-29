@@ -291,6 +291,13 @@ function log(game, text) {
   game.feed = game.feed.slice(0, 150);
 }
 
+function romano(game, text) {
+  game.romano = game.romano || [];
+  game.romano.unshift({ t: Date.now(), text });
+  game.romano = game.romano.slice(0, 80);
+}
+function fmtFee(fee) { return "\u00a3" + Math.round(fee) + "m"; }
+
 // ---------- youth academy ----------
 function pick1(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
@@ -376,6 +383,7 @@ function newGame(hostName) {
     offers: [],
     offerSeq: 1,
     stats: {},
+    romano: [],
     feed: [],
     created: Date.now()
   };
@@ -452,6 +460,7 @@ function doTransfer(game, offer) {
   p.listed = false;
   voidOtherOffers(game, p.id, offer.id);
   log(game, `TRANSFER: ${p.name} joins ${offer.toClub} from ${from} for £${offer.fee}m.`);
+  romano(game, `🚨✅ HERE WE GO! ${p.name} to ${offer.toClub}, done deal! ${fmtFee(offer.fee)} package agreed with ${from}. Medical booked, contract signed.`);
   return { ok: true };
 }
 
@@ -468,6 +477,7 @@ function resolveAiSellerOffer(game, offer) {
     if (p.rating >= 85 && p.age > 22 && !buyerBig && Math.random() < 0.45) {
       offer.status = "player_declined";
       offer.note = `${p.club} accepted £${offer.fee}m but ${p.name} turned down the move. Bigger clubs are circling.`;
+      romano(game, `❌ BREAKING: ${p.name} to ${offer.toClub} is OFF! Clubs had a full agreement at ${fmtFee(offer.fee)} but the player said no to the project. He is waiting for a bigger club.`);
       return;
     }
     const res = doTransfer(game, offer);
@@ -484,12 +494,14 @@ function resolveAiSellerOffer(game, offer) {
     offer.demand = newDemand;
     offer.status = "countered";
     offer.counterFee = newDemand;
+    romano(game, `🔴 ${offer.toClub} are pushing to sign ${p.name}. ${p.club} have rejected the latest proposal, they now want around ${fmtFee(newDemand)}. Negotiations ongoing.`);
     offer.note = newDemand <= floor + 0.05
       ? `${p.club} came down to £${newDemand}m. That is their final price, they will not go lower.`
       : `${p.club} rejected £${offer.fee}m but came down to £${newDemand}m. Keep haggling and they might drop a little more.`;
   } else {
     offer.status = "declined";
     offer.note = `${p.club} rejected £${offer.fee}m out of hand. Come back with something near £${baseAsk}m if you are serious.`;
+    romano(game, `❌ ${p.club} have turned down an approach from ${offer.toClub} for ${p.name}. The bid was considered way below their valuation. Deal not close.`);
   }
 }
 
@@ -528,6 +540,7 @@ function aiInboundBids(game) {
       sellerClub: user.team, fee, status: "pending_seller", direction: "inbound", week: game.round
     });
     log(game, `${bidder.name} have bid £${fee}m for ${target.name} (${user.team}).`);
+    romano(game, `🚨 EXCLUSIVE: ${bidder.name} have made an official approach for ${target.name}! Around ${fmtFee(fee)} on the table. ${user.team} must now decide, the player is aware of the interest.`);
   }
 }
 
@@ -790,6 +803,7 @@ function migrate(game) {
   if (!game.lock) game.lock = { active: false, week: 0 };
   if (!game.nations) game.nations = {};
   if (!game.stats) game.stats = {};
+  if (!game.romano) game.romano = [];
   for (const c of Object.values(game.clubs || {})) if (c.baseBudget === undefined) c.baseBudget = c.budget;
   if (!game.cups) game.cups = {};
   for (const u of Object.values(game.users || {})) if (u.nation === undefined) u.nation = null;
@@ -888,7 +902,9 @@ app.post("/api/lineup", (req, res) => {
   }
   const gks = xi.filter(id => game.players[id].pos === "GK").length;
   if (gks !== 1) return res.status(400).json({ error: "You need exactly one goalkeeper in the starting XI." });
-  game.clubs[user.team].lineup = { xi, subs };
+  const FORMS = ["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "5-3-2", "4-1-4-1", "3-4-3"];
+  const formation = FORMS.includes(req.body.formation) ? req.body.formation : "4-3-3";
+  game.clubs[user.team].lineup = { xi, subs, formation };
   save();
   res.json({ ok: true });
 });
@@ -966,6 +982,9 @@ app.post("/api/sim", (req, res) => {
   aiInboundBids(game);
   if (game.round >= (game.totalRounds || 38)) log(game, `SEASON ${game.season}: that was the final matchweek. Awards are in the Tables tab. The host can start the next season when everyone is ready.`);
   const isOpen = windowOpen(game);
+  if (game.windowWasOpen === true && !isOpen) romano(game, `⏳ The transfer window has SLAMMED SHUT. No more deals until it reopens. Time to judge every club's business.`);
+  if (game.windowWasOpen === false && isOpen) romano(game, `🚨 The transfer window is officially OPEN! Expect a crazy few weeks, clubs are already working on their targets.`);
+  game.windowWasOpen = isOpen;
   if (wasOpen && !isOpen) log(game, "The transfer window has SLAMMED SHUT. No deals until it reopens.");
   if (!wasOpen && isOpen) log(game, "The transfer window is OPEN. Get your deals done.");
   game.lock = { active: true, week: playedWeek };
@@ -1015,6 +1034,7 @@ app.post("/api/offer", (req, res) => {
   if (sellerHuman) {
     offer.status = "pending_seller";
     log(game, `${user.team} have bid £${fee}m for ${p.name} (${p.club}).`);
+    romano(game, `🚨 EXCLUSIVE: ${user.team} have submitted an official bid for ${p.name}, around ${fmtFee(fee)} on the table. ${p.club} are now internally discussing the proposal. More to follow.`);
   } else {
     resolveAiSellerOffer(game, offer);
   }
@@ -1034,7 +1054,11 @@ app.post("/api/respond", (req, res) => {
   const isSeller = user.team === offer.sellerClub;
   const isBuyer = offer.buyerUser === user.name;
 
-  if (action === "withdraw" && isBuyer) { offer.status = "withdrawn"; save(); return res.json({ ok: true }); }
+  if (action === "withdraw" && isBuyer) {
+    offer.status = "withdrawn";
+    romano(game, `❌ ${offer.toClub || offer.sellerClub} have walked away from the ${p.name} deal. Negotiations over, the bid is withdrawn.`);
+    save(); return res.json({ ok: true });
+  }
 
   if ((action === "accept" || action === "counter") && !windowOpen(game)) {
     return res.status(400).json({ error: "The transfer window is shut. You can only decline or withdraw until it reopens." });
@@ -1058,6 +1082,7 @@ app.post("/api/respond", (req, res) => {
           offer.status = "accepted";
           voidOtherOffers(game, p.id, offer.id);
           log(game, `TRANSFER: ${p.name} leaves ${offer.sellerClub} for ${offer.fromClub}, £${offer.fee}m.`);
+          romano(game, `🚨✅ HERE WE GO! ${p.name} to ${offer.fromClub}, confirmed! ${fmtFee(offer.fee)} to ${offer.sellerClub}. Agreement completed, players and clubs all happy.`);
         }
       } else {
         const r = doTransfer(game, offer);
@@ -1067,11 +1092,13 @@ app.post("/api/respond", (req, res) => {
     } else if (action === "decline") {
       offer.status = "declined";
       log(game, `${offer.sellerClub} rejected the £${offer.fee}m bid for ${p.name}.`);
+      romano(game, `❌ ${offer.sellerClub} have rejected the bid for ${p.name}. Told the club consider him not for sale at that price. Deal off for now.`);
     } else if (action === "counter") {
       const cf = Math.round(Number(req.body.counterFee) * 10) / 10;
       if (!(cf > 0)) return res.status(400).json({ error: "Enter a counter fee." });
       offer.status = "countered"; offer.counterFee = cf;
       log(game, `${offer.sellerClub} want £${cf}m for ${p.name}.`);
+      romano(game, `🔴 Talks continue for ${p.name}. ${offer.sellerClub} have sent a counter proposal, they want around ${fmtFee(cf)}. Ball now in the other court.`);
     }
     save(); return res.json({ ok: true });
   }
@@ -1198,6 +1225,7 @@ app.get("/api/state", (req, res) => {
     }) : [],
     offers: relevantOffers,
     feed: game.feed.slice(0, 40),
+    romano: (game.romano || []).slice(0, 40),
     history: game.history || []
   });
 });

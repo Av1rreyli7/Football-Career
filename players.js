@@ -510,9 +510,16 @@ function buildDatabase() {
     byId[p.id] = p;
     club.squad.push(p.id);
   }
-  // hand tuned headline numbers
-  const psg = clubs["PSG"] || clubs["Paris Saint-Germain"] || clubs["Paris Saint Germain"];
-  if (psg) psg.budget = 250;
+  // hand tuned budgets for the giants
+  const bigMoney = {
+    "PSG": 280, "Man City": 230, "Real Madrid": 200, "Barcelona": 180,
+    "Liverpool": 180, "Arsenal": 175, "Chelsea": 170, "Man United": 160,
+    "Newcastle": 155, "Tottenham": 150,
+    "Bayern Munich": 160, "Al-Hilal": 160, "Al-Nassr": 150,
+    "Atletico Madrid": 145, "Juventus": 140, "Inter Milan": 140,
+    "Al-Ittihad": 140, "AC Milan": 135, "Napoli": 130
+  };
+  for (const [name, money] of Object.entries(bigMoney)) if (clubs[name]) clubs[name].budget = money;
   const yamal = players.find(p => p.name === "Lamine Yamal");
   if (yamal) yamal.value = 230;
   return { players, clubs };
