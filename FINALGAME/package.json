@@ -1,9 +1,0 @@
-{
-  "name": "floodlights-career",
-  "version": "1.0.0",
-  "description": "Multiplayer Premier League career mode for you and your friends",
-  "main": "server.js",
-  "scripts": { "start": "node server.js" },
-  "engines": { "node": ">=18" },
-  "dependencies": { "express": "^4.19.2" }
-}
