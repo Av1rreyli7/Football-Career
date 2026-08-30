@@ -133,31 +133,134 @@ function humanInvolved(game, teams) {
   return teams.some(t => humanOf(game, t) || (game.nations && game.nations[t] && game.nations[t].manager));
 }
 
-function simCupsForWeek(game) {
+function sideManager(game, team) {
+  const hu = humanOf(game, team);
+  if (hu) return hu.name;
+  const n = (game.nations || {})[team];
+  return n && n.manager ? n.manager : null;
+}
+
+// a tie went to pens with a real manager involved: park it and let them shoot
+function startShootout(game, cup, m) {
+  game.shootouts = game.shootouts || {};
+  const key = cup.key + "|" + m.home + "|" + m.away;
+  game.shootouts[key] = {
+    key, cupKey: cup.key, cupTitle: cup.title, home: m.home, away: m.away,
+    hScore: 0, aScore: 0, kickNum: 0, phase: "shoot",
+    kicker: "home", pendingShot: null, kicks: [], done: false,
+    hMgr: sideManager(game, m.home), aMgr: sideManager(game, m.away)
+  };
+  m.pensPending = true;
+  log(game, `${cup.title}: ${m.home} ${m.hg}-${m.ag} ${m.away} after normal time. PENALTIES! The managers walk to the technical area.`);
+  romano(game, `\u26a0\ufe0f ${m.home} v ${m.away} in the ${cup.title} is going to PENALTIES. Nobody breathe.`);
+}
+
+function shootoutWinnerDecided(so) {
+  // best of five: decided when one side cannot catch the other, then sudden death pairs
+  const hTaken = Math.ceil(so.kickNum / 2);
+  const aTaken = Math.floor(so.kickNum / 2);
+  if (so.kickNum <= 10) {
+    if (so.hScore > so.aScore + (5 - aTaken)) return so.home;
+    if (so.aScore > so.hScore + (5 - hTaken)) return so.away;
+    if (so.kickNum === 10 && so.hScore !== so.aScore) return so.hScore > so.aScore ? so.home : so.away;
+  } else if (so.kickNum % 2 === 0 && so.hScore !== so.aScore) {
+    return so.hScore > so.aScore ? so.home : so.away;
+  }
+  return null;
+}
+
+function finishShootout(game, so, winner) {
+  so.done = true;
+  so.winner = winner;
+  const cup = (game.cups || {})[so.cupKey];
+  if (cup) {
+    for (const round of cup.rounds) {
+      const m = round.find(x => x.home === so.home && x.away === so.away && x.pensPending);
+      if (m) { m.pensPending = false; m.pens = true; m.winner = winner; break; }
+    }
+  }
+  log(game, `${so.cupTitle}: ${winner} win the shootout ${so.hScore}-${so.aScore} against ${winner === so.home ? so.away : so.home}!`);
+  romano(game, `\ud83e\udde4 Drama over: ${winner} hold their nerve and win on penalties ${so.hScore}-${so.aScore}. Heartbreak for ${winner === so.home ? so.away : so.home}.`);
+  advanceReadyCups(game);
+}
+
+// one kick: shooter direction against keeper direction, ratings nudge the odds
+function resolveKick(game, so, shotDir, diveDir) {
+  const team = so.kicker === "home" ? so.home : so.away;
+  const other = so.kicker === "home" ? so.away : so.home;
+  const xi = game.nations && game.nations[team] ? nationXI(game, team) : chosenXI(game, team);
+  const kickerIdx = Math.floor(so.kickNum / 2) % Math.max(1, xi.length);
+  const taker = [...xi].sort((a, b) => b.rating - a.rating)[kickerIdx] || xi[0];
+  const oxi = game.nations && game.nations[other] ? nationXI(game, other) : chosenXI(game, other);
+  const gk = oxi.find(p => p.pos === "GK");
+  let goal;
+  if (Math.random() < 0.04) goal = false;
+  else if (diveDir === shotDir) {
+    let saveP = 0.62 + ((gk ? gk.rating : 75) - (taker ? taker.rating : 75)) * 0.004;
+    saveP = Math.max(0.35, Math.min(0.85, saveP));
+    goal = Math.random() >= saveP;
+  } else goal = Math.random() < 0.94;
+  so.kickNum++;
+  if (goal) { if (so.kicker === "home") so.hScore++; else so.aScore++; }
+  so.kicks.push({ team, taker: taker ? taker.name : team, dir: shotDir, dive: diveDir, goal });
+  so.kicker = so.kicker === "home" ? "away" : "home";
+  so.phase = "shoot";
+  so.pendingShot = null;
+  const winner = shootoutWinnerDecided(so);
+  if (winner) finishShootout(game, so, winner);
+}
+
+function aiDir() { return ["left", "center", "right"][Math.floor(Math.random() * 3)]; }
+
+// AI takes over any part of the shootout no human owns; runs until a human must act
+function autoAdvanceShootout(game, so) {
+  let guard = 0;
+  while (!so.done && guard++ < 60) {
+    const kickTeam = so.kicker === "home" ? so.home : so.away;
+    const saveTeam = so.kicker === "home" ? so.away : so.home;
+    const kickMgr = so.kicker === "home" ? so.hMgr : so.aMgr;
+    const saveMgr = so.kicker === "home" ? so.aMgr : so.hMgr;
+    if (so.phase === "shoot") {
+      if (kickMgr) return;
+      so.pendingShot = aiDir();
+      so.phase = "save";
+    } else {
+      if (saveMgr) return;
+      resolveKick(game, so, so.pendingShot, aiDir());
+    }
+  }
+  if (!so.done && guard >= 60) {
+    const winner = so.hScore >= so.aScore ? so.home : so.away;
+    finishShootout(game, so, winner);
+  }
+}
+
+// any shootout still hanging when the next matchweek sims gets settled the old way
+function settleStaleShootouts(game) {
+  for (const so of Object.values(game.shootouts || {})) {
+    if (so.done) continue;
+    const A = strengths(game, so.home), B = strengths(game, so.away);
+    const pA = (A.att + A.def) / (A.att + A.def + B.att + B.def);
+    while (!shootoutWinnerDecided(so) && so.kickNum < 40) {
+      const goal = Math.random() < (so.kicker === "home" ? 0.5 + (pA - 0.5) * 0.4 : 0.5 - (pA - 0.5) * 0.4) + 0.26;
+      so.kickNum++;
+      if (goal) { if (so.kicker === "home") so.hScore++; else so.aScore++; }
+      so.kicks.push({ team: so.kicker === "home" ? so.home : so.away, taker: "", dir: "", dive: "", goal });
+      so.kicker = so.kicker === "home" ? "away" : "home";
+    }
+    finishShootout(game, so, shootoutWinnerDecided(so) || (Math.random() < pA ? so.home : so.away));
+  }
+  game.shootouts = {};
+}
+
+// cups advance once every tie in the current round has a winner
+function advanceReadyCups(game) {
   if (!game.cups) return;
   for (const cup of Object.values(game.cups)) {
     if (cup.winner) continue;
-    if (cup.weeks[cup.roundIdx] !== game.round) continue;
     const matches = cup.rounds[cup.roundIdx];
-    for (const m of matches) {
-      simMatch(game, m);
-      if (humanInvolved(game, [m.home, m.away]) || matches.length === 1) cupEvents(game, m);
-      if (m.hg === m.ag) {
-        m.pens = true;
-        const A = strengths(game, m.home), B = strengths(game, m.away);
-        const pA = (A.att + A.def) / (A.att + A.def + B.att + B.def);
-        m.winner = Math.random() < pA ? m.home : m.away;
-      } else {
-        m.winner = m.hg > m.ag ? m.home : m.away;
-      }
-      const wc = game.clubs[m.winner];
-      // round wins carry glory, the money comes with the trophy
-    }
-    const rn = (cup.roundNames && cup.roundNames[cup.roundIdx]) || nameForMatches(matches.length);
-    const involved = matches.some(m => humanInvolved(game, [m.home, m.away]));
-    if (involved || matches.length === 1) {
-      log(game, `${cup.title.toUpperCase()} ${rn.toUpperCase()}: ` + matches.map(m => `${m.home} ${m.hg}-${m.ag}${m.pens ? " (pens: " + m.winner + ")" : ""} ${m.away}`).join(" | "));
-    }
+    if (!matches || !matches.length) continue;
+    if (matches.some(m => m.hg === null || !m.winner)) continue;
     const winners = matches.map(m => m.winner);
     const pool = [...winners, ...(cup.byes || [])];
     cup.byes = [];
@@ -177,6 +280,43 @@ function simCupsForWeek(game) {
       cup.roundNames.push(nameForMatches(pool.length / 2));
     }
   }
+}
+
+function simCupsForWeek(game) {
+  if (!game.cups) return;
+  settleStaleShootouts(game);
+  for (const cup of Object.values(game.cups)) {
+    if (cup.winner) continue;
+    if (cup.weeks[cup.roundIdx] !== game.round) continue;
+    const matches = cup.rounds[cup.roundIdx];
+    for (const m of matches) {
+      simMatch(game, m);
+      if (humanInvolved(game, [m.home, m.away]) || matches.length === 1) cupEvents(game, m);
+      if (m.hg === m.ag) {
+        // level after ninety: human managers take the penalties themselves,
+        // AI only ties resolve with the exact same odds as before
+        if (sideManager(game, m.home) || sideManager(game, m.away)) {
+          const cupRef = cup;
+          startShootout(game, cupRef, m);
+          const so = game.shootouts[cupRef.key + "|" + m.home + "|" + m.away];
+          autoAdvanceShootout(game, so);
+          continue;
+        }
+        m.pens = true;
+        const A = strengths(game, m.home), B = strengths(game, m.away);
+        const pA = (A.att + A.def) / (A.att + A.def + B.att + B.def);
+        m.winner = Math.random() < pA ? m.home : m.away;
+      } else {
+        m.winner = m.hg > m.ag ? m.home : m.away;
+      }
+    }
+    const rn = (cup.roundNames && cup.roundNames[cup.roundIdx]) || nameForMatches(matches.length);
+    const involved = matches.some(m => humanInvolved(game, [m.home, m.away]));
+    if (involved || matches.length === 1) {
+      log(game, `${cup.title.toUpperCase()} ${rn.toUpperCase()}: ` + matches.map(m => `${m.home} ${m.hg}-${m.ag}${m.pensPending ? " (pens in progress)" : m.pens ? " (pens: " + m.winner + ")" : ""} ${m.away}`).join(" | "));
+    }
+  }
+  advanceReadyCups(game);
 }
 
 function code4() {
@@ -560,12 +700,96 @@ function windowOpen(game) {
   const r = game.round;
   return r <= 3 || (r >= 19 && r <= 22);
 }
+function deadlineDay(game) {
+  const r = game.round;
+  return r === 3 || r === 22;
+}
 function windowInfo(game) {
   const r = game.round;
-  if (r <= 3) return { open: true, label: "Summer window open, shuts after week 4" };
-  if (r >= 19 && r <= 22) return { open: true, label: "January window open, shuts after week 23" };
-  if (r < 19) return { open: false, label: "Window shut, January window opens after week 19" };
-  return { open: false, label: "Window shut for the season, reopens in the summer" };
+  if (r === 3) return { open: true, deadline: true, label: "DEADLINE DAY. The window slams shut after this week" };
+  if (r === 22) return { open: true, deadline: true, label: "DEADLINE DAY. The window slams shut after this week" };
+  if (r <= 3) return { open: true, deadline: false, label: "Summer window open, shuts after week 4" };
+  if (r >= 19 && r <= 22) return { open: true, deadline: false, label: "January window open, shuts after week 22" };
+  if (r < 19) return { open: false, deadline: false, label: "Window shut, January window opens after week 19" };
+  return { open: false, deadline: false, label: "Window shut for the season, reopens in the summer" };
+}
+
+// AI clubs scout their own needs and buy from each other, so the world
+// stays strong even when humans strip a league of its stars.
+function aiWeakestSpot(game, club) {
+  const squad = club.squad.map(id => game.players[id]).filter(p => p && !p.academy);
+  const byPos = { GK: [], DF: [], MF: [], FW: [] };
+  for (const p of squad) byPos[p.pos] && byPos[p.pos].push(p);
+  for (const [pos, min] of [["GK", 2], ["DF", 5], ["MF", 5], ["FW", 3]]) {
+    if (byPos[pos].length < min) return { pos, floor: 0 };
+  }
+  let worstPos = "MF", worstRating = 100;
+  for (const pos of ["GK", "DF", "MF", "FW"]) {
+    const best = byPos[pos].sort((a, b) => b.rating - a.rating).slice(0, pos === "GK" ? 1 : 3);
+    const avg = best.reduce((t, p) => t + p.rating, 0) / (best.length || 1);
+    if (avg < worstRating) { worstRating = avg; worstPos = pos; }
+  }
+  return { pos: worstPos, floor: worstRating };
+}
+
+function aiToAiTransfers(game) {
+  if (!windowOpen(game)) return;
+  const aiClubs = Object.values(game.clubs).filter(c =>
+    !humanOf(game, c.name) && (game.leagueFixtures || {})[c.league]);
+  // a club with a live bid on a human manager's player keeps its money ready
+  const committed = new Set((game.offers || [])
+    .filter(o => ["pending_seller", "countered"].includes(o.status) && o.direction === "inbound")
+    .map(o => o.fromClub));
+  const buyers = shuffle(aiClubs.filter(c => c.budget >= 5 && c.squad.length < 29 && !committed.has(c.name)));
+  // richer clubs shop more often, everyone shops sometimes
+  const frenzy = deadlineDay(game);
+  const active = buyers.filter(c => Math.random() < (0.18 + Math.min(0.4, c.budget / 400)) * (frenzy ? 1.7 : 1));
+  let done = 0, posts = 0;
+  const dealCap = frenzy ? 20 : 10;
+  const humanLeagues = new Set(Object.values(game.users).filter(u => u.team && game.clubs[u.team]).map(u => game.clubs[u.team].league));
+  for (const buyer of active) {
+    if (done >= dealCap) break;
+    const need = aiWeakestSpot(game, buyer);
+    const wantKid = buyer.budget > (buyer.baseBudget || buyer.budget) * 0.6 && Math.random() < 0.3;
+    const pool = Object.values(game.players).filter(p =>
+      p.club !== buyer.name && !p.academy && !p.loanOwner &&
+      !humanOf(game, p.club) && game.clubs[p.club] &&
+      (game.leagueFixtures || {})[p.league] &&
+      game.clubs[p.club].squad.length > 15 &&
+      (wantKid ? (p.age <= 21 && p.rating >= 76) : (p.pos === need.pos && p.rating >= need.floor + 2)) &&
+      p.value <= buyer.budget * 0.85 && p.value >= 2);
+    if (!pool.length) continue;
+    pool.sort((a, b) => b.rating - a.rating);
+    const target = pool[Math.floor(Math.random() * Math.min(6, pool.length))];
+    const seller = game.clubs[target.club];
+    // clubs fight to keep their best player unless the money is silly
+    const isCrown = seller.squad.map(id => game.players[id]).filter(Boolean)
+      .sort((a, b) => b.rating - a.rating)[0];
+    let fee = Math.round(target.value * (0.95 + Math.random() * 0.25) * 10) / 10;
+    if (isCrown && isCrown.id === target.id) {
+      if (Math.random() < 0.65) continue;
+      fee = Math.round(target.value * 1.3 * 10) / 10;
+    }
+    if (fee > buyer.budget) continue;
+    buyer.budget = Math.round((buyer.budget - fee) * 10) / 10;
+    seller.budget = Math.round((seller.budget + fee) * 10) / 10;
+    seller.squad = seller.squad.filter(id => id !== target.id);
+    stripFromLineup(seller, target.id);
+    buyer.squad.push(target.id);
+    const from = target.club;
+    target.club = buyer.name;
+    target.league = buyer.league;
+    target.listed = false;
+    voidOtherOffers(game, target.id, -1);
+    game.aiDeals = (game.aiDeals || 0) + 1;
+    done++;
+    const loud = target.rating >= 85 || humanLeagues.has(buyer.league) || humanLeagues.has(seller.league);
+    if (loud && posts < 3) {
+      posts++;
+      log(game, `TRANSFER: ${target.name} joins ${buyer.name} from ${from} for £${fee}m.`);
+      if (target.rating >= 86) romano(game, `🚨✅ HERE WE GO! ${target.name} to ${buyer.name}, done deal! ${fmtFee(fee)} to ${from}. The AI clubs are spending big this window.`);
+    }
+  }
 }
 
 function aiInboundBids(game) {
@@ -685,6 +909,7 @@ function spawnWonderkids(game) {
 }
 
 function endOfSeason(game) {
+  settleStaleShootouts(game);
   const champions = {};
   game.lastTables = {};
   const historyTables = {};
@@ -720,6 +945,28 @@ function endOfSeason(game) {
   for (const c of Object.values(cups)) {
     const wc = c.winner && game.clubs[c.winner];
     if (wc) wc.budget = Math.round((wc.budget + 5) * 10) / 10;
+  }
+  // merit money, same rules for humans and AI:
+  // a) prize money by final position, b) a bonus for finishing above what
+  // your budget says you should, so underdogs get real cash to reinvest
+  for (const league of Object.keys(game.leagueFixtures)) {
+    const table = tableFor(game, league);
+    if (!table.length) continue;
+    const byMoney = table.map(r => game.clubs[r.team]).filter(Boolean)
+      .sort((a, b) => (b.baseBudget !== undefined ? b.baseBudget : b.budget) - (a.baseBudget !== undefined ? a.baseBudget : a.budget))
+      .map(c => c.name);
+    table.forEach((row, i) => {
+      const club = game.clubs[row.team];
+      if (!club) return;
+      const posPrize = Math.round(Math.max(0, table.length - 1 - i) * 0.6 * 10) / 10;
+      const budgetRank = byMoney.indexOf(row.team) + 1;
+      const over = budgetRank > 0 ? Math.max(0, budgetRank - (i + 1)) : 0;
+      const overBonus = Math.min(20, over * 2);
+      club.budget = Math.round((club.budget + posPrize + overBonus) * 10) / 10;
+      if (overBonus >= 8 && humanOf(game, row.team)) {
+        log(game, `MERIT MONEY: ${row.team} finished ${i + 1} with the league's number ${budgetRank} budget. The board adds £${overBonus}m to the war chest.`);
+      }
+    });
   }
 
   game.history = game.history || [];
@@ -826,6 +1073,34 @@ function endOfSeason(game) {
   spawnWonderkids(game);
   if (retired) log(game, `${retired} players retired this summer and ${regens} regens stepped up.`);
 
+  // promotion and relegation: three down, three up, in every country with a second tier
+  for (const [league, meta] of Object.entries(LEAGUES)) {
+    if (!meta.playable || !meta.second || !game.leagueFixtures[league] || !game.leagueFixtures[meta.second]) continue;
+    const topTable = tableFor(game, league);
+    const lowTable = tableFor(game, meta.second);
+    if (topTable.length < 6 || lowTable.length < 6) continue;
+    const down = topTable.slice(-3).map(r => r.team);
+    const up = lowTable.slice(0, 3).map(r => r.team);
+    for (const name of down) {
+      const c = game.clubs[name];
+      if (!c) continue;
+      c.league = meta.second;
+      for (const id of c.squad) { const p = game.players[id]; if (p) p.league = meta.second; }
+      for (const id of (c.academy || [])) { const p = game.players[id]; if (p) p.league = meta.second; }
+      const hu = humanOf(game, name);
+      if (hu) { c.conf = Math.max(5, (c.conf !== undefined ? c.conf : 60) - 10); }
+      log(game, `RELEGATED: ${name} go down to the ${meta.second}.${hu ? " The board is furious." : ""}`);
+    }
+    for (const name of up) {
+      const c = game.clubs[name];
+      if (!c) continue;
+      c.league = league;
+      for (const id of c.squad) { const p = game.players[id]; if (p) p.league = league; }
+      for (const id of (c.academy || [])) { const p = game.players[id]; if (p) p.league = league; }
+      log(game, `PROMOTED: ${name} are going up to the ${league}!${humanOf(game, name) ? " What a season." : ""}`);
+    }
+    if (down.length) romano(game, `\ud83d\udcc9 Going down from the ${league}: ${down.join(", ")}. Coming up: ${up.join(", ")}. The market will move fast on relegated stars.`);
+  }
   refreshNations(game);
   for (const league of Object.keys(game.leagueFixtures)) {
     game.leagueFixtures[league] = makeFixtures(leagueClubs(game, league));
@@ -895,6 +1170,7 @@ function migrate(game) {
   if (!game.romano) game.romano = [];
   if (!game.lastEvents) game.lastEvents = {};
   if (!game.reacts) game.reacts = [];
+  if (!game.shootouts) game.shootouts = {};
   for (const u of Object.values(game.users || {})) if (u.sacked === undefined) u.sacked = false;
   for (const c of Object.values(game.clubs || {})) if (c.baseBudget === undefined) c.baseBudget = c.budget;
   if (!game.cups) game.cups = {};
@@ -1134,6 +1410,14 @@ app.post("/api/sim", (req, res) => {
       const p2 = seniors[Math.floor(Math.random() * seniors.length)];
       if (!(p2.inj > 0)) {
         p2.ban = 1;
+        for (const [key, entry] of Object.entries(game.lastEvents || {})) {
+          const [h, a] = key.split("|");
+          if (h === name || a === name) {
+            entry.ev.push({ n: p2.name, c: name, min: 30 + Math.floor(Math.random() * 61), red: true });
+            entry.ev.sort((x, y) => x.min - y.min);
+            break;
+          }
+        }
         if (humanOf(game, name)) log(game, `RED CARD: ${p2.name} (${name}) is suspended for the next match.`);
       }
     }
@@ -1182,10 +1466,15 @@ app.post("/api/sim", (req, res) => {
   const playedWeek = game.round;
   simCupsForWeek(game);
   aiInboundBids(game);
+  aiToAiTransfers(game);
   if (game.round >= (game.totalRounds || 38)) log(game, `SEASON ${game.season}: that was the final matchweek. Awards are in the Tables tab. The host can start the next season when everyone is ready.`);
   const isOpen = windowOpen(game);
   if (game.windowWasOpen === true && !isOpen) romano(game, `⏳ The transfer window has SLAMMED SHUT. No more deals until it reopens. Time to judge every club's business.`);
   if (game.windowWasOpen === false && isOpen) romano(game, `🚨 The transfer window is officially OPEN! Expect a crazy few weeks, clubs are already working on their targets.`);
+  if (deadlineDay(game)) {
+    romano(game, `\u23f0 IT IS DEADLINE DAY! One week left in the window. Faxes warming up, private jets on standby, expect absolute chaos before it SLAMS SHUT.`);
+    log(game, "DEADLINE DAY: last week of the window. Get your business done or wait months.");
+  }
   game.windowWasOpen = isOpen;
   if (wasOpen && !isOpen) log(game, "The transfer window has SLAMMED SHUT. No deals until it reopens.");
   if (!wasOpen && isOpen) log(game, "The transfer window is OPEN. Get your deals done.");
@@ -1487,6 +1776,30 @@ app.post("/api/staff", (req, res) => {
   res.json({ ok: true });
 });
 
+const PEN_DIRS = ["left", "center", "right"];
+app.post("/api/pens", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  const so = (game.shootouts || {})[req.body.key];
+  if (!so || so.done) return res.status(400).json({ error: "That shootout is over or does not exist." });
+  const dir = req.body.dir;
+  if (!PEN_DIRS.includes(dir)) return res.status(400).json({ error: "Pick left, center or right." });
+  const kickMgr = so.kicker === "home" ? so.hMgr : so.aMgr;
+  const saveMgr = so.kicker === "home" ? so.aMgr : so.hMgr;
+  if (so.phase === "shoot") {
+    if (kickMgr !== user.name) return res.status(403).json({ error: "It is not your kick." });
+    so.pendingShot = dir;
+    so.phase = "save";
+    if (!saveMgr) resolveKick(game, so, so.pendingShot, aiDir());
+  } else {
+    if (saveMgr !== user.name) return res.status(403).json({ error: "It is not your save." });
+    resolveKick(game, so, so.pendingShot, dir);
+  }
+  if (!so.done) autoAdvanceShootout(game, so);
+  save();
+  res.json({ ok: true });
+});
+
 const REACTS = ["\ud83d\ude02", "\ud83d\udd25", "\ud83d\udc80", "\ud83d\udc4f", "\ud83e\udd21", "\ud83d\ude2d"];
 app.post("/api/react", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
@@ -1551,6 +1864,22 @@ app.get("/api/state", (req, res) => {
     sacked: !!user.sacked,
     staffPrices: { scout: 15, youth: 20, physio: 10, analyst: 10 },
     lastEvents: game.lastEvents || {},
+    aiDeals: game.aiDeals || 0,
+    shootouts: Object.values(game.shootouts || {}).map(so => {
+      const kickMgr = so.kicker === "home" ? so.hMgr : so.aMgr;
+      const saveMgr = so.kicker === "home" ? so.aMgr : so.hMgr;
+      let yourJob = null;
+      if (!so.done && so.phase === "shoot" && kickMgr === user.name) yourJob = "shoot";
+      if (!so.done && so.phase === "save" && saveMgr === user.name) yourJob = "save";
+      return {
+        key: so.key, cupTitle: so.cupTitle, home: so.home, away: so.away,
+        hScore: so.hScore, aScore: so.aScore, kickNum: so.kickNum,
+        phase: so.phase, kicker: so.kicker, done: !!so.done, winner: so.winner || null,
+        hMgr: so.hMgr, aMgr: so.aMgr, yourJob,
+        waitingOn: so.done ? null : (so.phase === "shoot" ? (kickMgr || "AI") : (saveMgr || "AI")),
+        kicks: so.kicks.map(k => ({ team: k.team, taker: k.taker, goal: k.goal, dive: k.dive, dir: k.dir }))
+      };
+    }),
     reacts: (game.reacts || []).slice(-30),
     scoutTips: (myTeam && (game.clubs[myTeam].staff || {}).scout)
       ? Object.values(game.players)
@@ -1569,6 +1898,32 @@ app.get("/api/state", (req, res) => {
       };
     }),
     window: windowInfo(game),
+    seasonAwards: (game.started && game.round >= (game.totalRounds || 38)) ? (() => {
+      const out = {};
+      for (const league of Object.keys(game.leagueFixtures || {})) {
+        if (!(LEAGUES[league] || {}).playable) continue;
+        const table = tableFor(game, league);
+        if (!table.length) continue;
+        const a = leagueAwards(game, league);
+        const byMoney = table.map(r => game.clubs[r.team]).filter(Boolean)
+          .sort((x, y) => (y.baseBudget !== undefined ? y.baseBudget : y.budget) - (x.baseBudget !== undefined ? x.baseBudget : x.budget))
+          .map(c => c.name);
+        let motss = null, bestOver = -99;
+        table.forEach((row, i) => {
+          const over = byMoney.indexOf(row.team) - i;
+          if (over > bestOver) { bestOver = over; motss = row.team; }
+        });
+        const hu = motss && humanOf(game, motss);
+        out[league] = {
+          champion: table[0].team,
+          championManager: humanOf(game, table[0].team) ? humanOf(game, table[0].team).name : "AI",
+          boot: a.boot, ball: a.ball, pots: a.pots,
+          motss: motss ? { club: motss, manager: hu ? hu.name : "AI", over: bestOver } : null,
+          relegated: (LEAGUES[league] || {}).second ? table.slice(-3).map(r => r.team) : []
+        };
+      }
+      return out;
+    })() : null,
     lock: game.lock || { active: false, week: 0 },
     cups: Object.values(game.cups || {}).map(c => ({
       key: c.key,

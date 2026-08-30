@@ -237,6 +237,42 @@ tr.me td{background:rgba(255,180,36,.06)}
 
 
 
+
+/* ---------- live matchday ---------- */
+.liveclock{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.3em;color:var(--red);text-align:center;padding:8px 0 0}
+.liveclock b{color:var(--chalk)}
+@keyframes goalpop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.goalpop{animation:goalpop .5s ease}
+/* ---------- penalties ---------- */
+#pensBox{border-bottom:1px solid var(--hair);padding:16px 14px;text-align:center}
+.pen-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-style:italic;font-size:24px;text-transform:uppercase}
+.pen-title span{color:var(--gold)}
+.pen-score{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:44px;margin:6px 0}
+.pen-dots{display:flex;justify-content:center;gap:26px;margin:4px 0 10px}
+.pen-row{display:flex;gap:5px;align-items:center}
+.pen-row .pn{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-right:6px}
+.pendot{width:13px;height:13px;border-radius:50%;border:1px solid var(--line);background:var(--panel2)}
+.pendot.g{background:var(--grass);border-color:var(--grass)}
+.pendot.m{background:var(--red);border-color:var(--red)}
+.pen-act{display:flex;justify-content:center;gap:10px;margin-top:10px}
+.pen-act button{min-width:96px}
+.pen-wait{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase;margin-top:8px}
+.pen-last{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:var(--chalk);margin-top:6px;text-transform:uppercase}
+/* ---------- awards ceremony ---------- */
+#awardsOverlay{position:fixed;inset:0;z-index:70;background:radial-gradient(ellipse at 50% -10%, #241c06 0%, var(--night) 62%);display:flex;align-items:center;justify-content:center;overflow:auto;padding:24px}
+.awinner{max-width:620px;width:100%;text-align:center;padding:30px 10px}
+.awh{font-size:clamp(34px,7vw,54px);font-style:italic;margin:6px 0 20px}
+.awh span{color:var(--gold)}
+.awrow{display:flex;justify-content:space-between;align-items:center;gap:14px;border:1px solid var(--line);background:var(--panel2);padding:12px 16px;margin-bottom:8px;text-align:left}
+.awrow .ak{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
+.awrow .av{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:19px;text-transform:uppercase}
+.awrow .av small{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--gold);letter-spacing:.14em;display:block}
+.awrow.champ{border-color:var(--gold)}
+.awrow.champ .av{color:var(--gold)}
+.awrow.doom .av{color:var(--red)}
+/* ---------- deadline day ---------- */
+.dlbanner{display:flex;align-items:center;gap:10px;border:1px solid var(--red);color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.26em;padding:10px 14px;margin-bottom:12px;text-transform:uppercase;background:rgba(224,75,58,.06)}
+
 /* ---------- staff strip ---------- */
 .staffcard{border:1px solid var(--line);background:var(--panel2);padding:11px 13px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .staffcard .sn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;text-transform:uppercase}
@@ -468,6 +504,7 @@ tr.me td{background:rgba(255,180,36,.06)}
     </section>
 
     <section id="tab-market" class="panel hidden">
+      <div id="dlBanner" class="hidden dlbanner"><span class="pulse red"></span>DEADLINE DAY &middot; THE WINDOW SLAMS SHUT AFTER THIS WEEK</div>
       <div class="controls">
         <input id="mq" placeholder="Search player or club" style="flex:1;min-width:160px">
         <select id="mleague"><option value="">All leagues</option></select>
@@ -580,6 +617,15 @@ tr.me td{background:rgba(255,180,36,.06)}
     <p class="msub" style="text-align:center;padding:10px 0 26px;letter-spacing:.24em">DRAG TO LOOK AROUND &middot; EVERY PIECE SPINS FOREVER</p>
   </div>
 
+  <div id="awardsOverlay" class="hidden">
+    <div class="awinner">
+      <div class="msub" style="letter-spacing:.34em;color:var(--gold)">END OF SEASON</div>
+      <h2 class="awh">THE <span>AWARDS</span></h2>
+      <div id="awardsBody"></div>
+      <button id="awardsGo" class="gold" style="margin-top:22px">CONTINUE TO THE SUMMER &rarr;</button>
+    </div>
+  </div>
+
   <div id="matchday" class="hidden">
     <div class="inner">
       <div class="mdtop">
@@ -588,6 +634,7 @@ tr.me td{background:rgba(255,180,36,.06)}
       </div>
       <div class="mdhero hidden" id="mdHero"></div>
       <div id="mdScorers" class="msub hidden" style="text-align:center;padding:10px 14px;border-bottom:1px solid var(--hair);letter-spacing:.18em;line-height:2"></div>
+      <div id="pensBox" class="hidden"></div>
       <div class="reactbar" id="reactBar"></div>
       <div id="reactFeed" class="reactfeed"></div>
       <p class="sub" id="mdSub"></p>
@@ -645,6 +692,89 @@ function leave(){
   $("lobby").classList.remove("hidden");
 }
 $("leaveBtn").onclick = leave;
+
+// ---- penalty shootouts ----
+function renderPens(s) {
+  const box = $("pensBox");
+  if (!box) return;
+  const live = (s.shootouts || []).filter(so => !so.done);
+  const recent = (s.shootouts || []).filter(so => so.done);
+  const mine = live.find(so => so.hMgr === s.you || so.aMgr === s.you) || live[0] || recent.find(so => so.hMgr === s.you || so.aMgr === s.you);
+  if (!mine) { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  const so = mine;
+  const dots = side => {
+    const ks = so.kicks.filter(k => k.team === (side === "h" ? so.home : so.away));
+    let out = "";
+    const total = Math.max(5, ks.length);
+    for (let i = 0; i < total; i++) {
+      const k = ks[i];
+      out += `<span class="pendot ${k ? (k.goal ? "g" : "m") : ""}"></span>`;
+    }
+    return out;
+  };
+  const last = so.kicks[so.kicks.length - 1];
+  let act = "";
+  if (so.done) {
+    act = `<div class="pen-wait" style="color:var(--gold)">${so.winner.toUpperCase()} WIN THE SHOOTOUT ${so.hScore}-${so.aScore}</div>`;
+  } else if (so.yourJob === "shoot") {
+    act = `<div class="pen-wait" style="color:var(--gold)">YOU ARE UP. PICK YOUR CORNER.</div>
+      <div class="pen-act">
+        <button class="gold" onclick="penKick('${so.key}','left')">SHOOT LEFT</button>
+        <button class="gold" onclick="penKick('${so.key}','center')">DOWN THE MIDDLE</button>
+        <button class="gold" onclick="penKick('${so.key}','right')">SHOOT RIGHT</button>
+      </div>`;
+  } else if (so.yourJob === "save") {
+    act = `<div class="pen-wait" style="color:var(--gold)">THEY ARE SHOOTING. PICK A SIDE TO DIVE.</div>
+      <div class="pen-act">
+        <button onclick="penKick('${so.key}','left')">DIVE LEFT</button>
+        <button onclick="penKick('${so.key}','center')">STAND TALL</button>
+        <button onclick="penKick('${so.key}','right')">DIVE RIGHT</button>
+      </div>`;
+  } else {
+    act = `<div class="pen-wait">WAITING ON ${String(so.waitingOn || "AI").toUpperCase()}...</div>`;
+  }
+  box.innerHTML = `
+    <div class="pen-title">PENALTIES <span>&middot; ${so.cupTitle.toUpperCase()}</span></div>
+    <div class="pen-score">${so.home.toUpperCase()} ${so.hScore} - ${so.aScore} ${so.away.toUpperCase()}</div>
+    <div class="pen-dots">
+      <div class="pen-row"><span class="pn">${so.home}</span>${dots("h")}</div>
+      <div class="pen-row"><span class="pn">${so.away}</span>${dots("a")}</div>
+    </div>
+    ${last ? `<div class="pen-last">${last.taker ? last.taker.toUpperCase() + " " : ""}${last.goal ? "SCORES" : "MISSES"}${last.dive && last.dir && last.dive === last.dir && !last.goal ? " \u00b7 KEEPER GUESSED RIGHT" : ""}</div>` : ""}
+    ${act}`;
+}
+window.penKick = async (key, dir) => {
+  try { await api("/api/pens", { key, dir }); await tick(); } catch (e) { alert(e.message); }
+};
+
+// ---- season awards ceremony ----
+function renderAwards(s) {
+  const ov = $("awardsOverlay");
+  if (!ov) return;
+  const lockActive = s.lock && s.lock.active;
+  const key = "fl_awards_" + (ME.code || "") + "_" + s.season;
+  let seen = false;
+  try { seen = !!localStorage.getItem(key); } catch (e) {}
+  const show = s.seasonOver && !lockActive && !seen && s.seasonAwards;
+  ov.classList.toggle("hidden", !show);
+  if (!show) return;
+  const lg = (s.myLeague && s.seasonAwards[s.myLeague]) ? s.myLeague : "Premier League";
+  const a = s.seasonAwards[lg] || Object.values(s.seasonAwards)[0];
+  if (!a) { ov.classList.add("hidden"); return; }
+  const row = (k, v, sub, cls) => `<div class="awrow ${cls || ""}"><span class="ak">${k}</span><span class="av">${v}${sub ? `<small>${sub}</small>` : ""}</span></div>`;
+  $("awardsBody").innerHTML =
+    row("CHAMPIONS \u00b7 " + lg.toUpperCase(), a.champion, a.championManager !== "AI" ? "MANAGER: " + a.championManager.toUpperCase() : "", "champ") +
+    (a.boot ? row("GOLDEN BOOT", a.boot.name, a.boot.club.toUpperCase() + " \u00b7 " + a.boot.g + " GOALS") : "") +
+    (a.ball ? row("GOLDEN BALL", a.ball.name, a.ball.club.toUpperCase() + " \u00b7 " + a.ball.a + " ASSISTS") : "") +
+    (a.pots ? row("PLAYER OF THE SEASON", a.pots.name, a.pots.club.toUpperCase()) : "") +
+    (a.motss ? row("MANAGER OF THE SEASON", a.motss.manager !== "AI" ? a.motss.manager : a.motss.club, a.motss.manager !== "AI" ? a.motss.club.toUpperCase() : "OVERACHIEVED BY " + a.motss.over + " PLACES") : "") +
+    (a.relegated && a.relegated.length ? row("GOING DOWN", a.relegated.join(" \u00b7 "), "", "doom") : "");
+  $("awardsGo").onclick = () => {
+    try { localStorage.setItem(key, "1"); } catch (e) {}
+    ov.classList.add("hidden");
+  };
+}
 
 // ---- trophy cabinet ----
 function myTrophies(s) {
@@ -1095,6 +1225,10 @@ function render() {
   // cabinet tab
   renderCabinet(s);
 
+  // awards ceremony and deadline day
+  renderAwards(s);
+  if ($("dlBanner")) $("dlBanner").classList.toggle("hidden", !(s.window && s.window.deadline));
+
   // nations
   renderNations(s);
 
@@ -1370,13 +1504,83 @@ function renderRomano(s) {
 }
 
 // ---- matchday lock ----
+const LIVE = { week: null, clock: 0, timer: null, done: true };
+function liveKey(s) { return "fl_seen_" + (ME.code || "") + "_" + (s.lock ? s.lock.week : 0) + "_" + s.season; }
+function liveEvents(s, mm) {
+  const evd = mm ? (s.lastEvents || {})[mm.home + "|" + mm.away] : null;
+  return evd && evd.ev ? evd.ev : [];
+}
+function finishLive(s) {
+  LIVE.done = true;
+  if (LIVE.timer) { clearInterval(LIVE.timer); LIVE.timer = null; }
+  try { localStorage.setItem(liveKey(s), "1"); } catch (e) {}
+  if (STATE) renderMatchday(STATE);
+}
+function renderLiveFrame(s, mm) {
+  const myName = s.myClub ? s.myClub.name : null;
+  const evs = liveEvents(s, mm).filter(e => e.min <= LIVE.clock);
+  let hg = 0, ag = 0;
+  for (const e of evs) { if (!e.red) { if (e.c === mm.home) hg++; else if (e.c === mm.away) ag++; } }
+  const homeMine = mm.home === myName;
+  $("mdHero").innerHTML = `
+    <div class="tm${homeMine ? "" : " away"}" style="text-align:right">${mm.home}</div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="sc${homeMine ? "" : " away"}">${hg}</span>
+      <span class="dash">-</span>
+      <span class="sc${homeMine ? " away" : ""}">${ag}</span>
+    </div>
+    <div class="tm${homeMine ? " away" : ""}">${mm.away}</div>
+    <div class="liveclock" style="grid-column:1/-1"><b>LIVE</b> &middot; ${Math.min(90, LIVE.clock)}'${LIVE.clock > 90 ? "+" : ""}</div>`;
+  $("mdHero").classList.remove("hidden");
+  const sc = $("mdScorers");
+  if (sc) {
+    if (evs.length) {
+      sc.innerHTML = evs.map(e => `<span class="goalpop">${e.red ? "\ud83d\udfe5 " : ""}${e.n.toUpperCase()} ${e.min}'</span>`).join(" \u00b7 ");
+      sc.classList.remove("hidden");
+    } else { sc.innerHTML = ""; sc.classList.add("hidden"); }
+  }
+  $("mdLeague").innerHTML = "<p style='color:var(--dim)'>Full time scores land when your match finishes.</p>";
+  $("mdCupsPanel").classList.add("hidden");
+  if ($("pensBox")) $("pensBox").classList.add("hidden");
+  $("mdSub").textContent = "Your match is being played right now. The rest of the results come in at full time.";
+  $("mdFoot").innerHTML = `<span class="msub">LIVE COVERAGE</span><button id="mdSkip" class="ghost">SKIP TO FULL TIME &rarr;</button>`;
+  const sk = $("mdSkip");
+  if (sk) sk.onclick = () => finishLive(s);
+}
 function renderMatchday(s) {
   const lock = s.lock || { active: false };
   const show = lock.active && s.started !== false;
   $("matchday").classList.toggle("hidden", !show);
-  if (!show) return;
+  if (!show) { if (LIVE.timer) { clearInterval(LIVE.timer); LIVE.timer = null; } LIVE.week = null; return; }
   const myName = s.myClub ? s.myClub.name : null;
   $("mdWeek").textContent = lock.week;
+  // fresh week: run the match live before revealing everything, unless already seen
+  const liveWeekKey = lock.week + "_" + s.season;
+  if (LIVE.week !== liveWeekKey) {
+    LIVE.week = liveWeekKey;
+    LIVE.clock = 0;
+    let seen = false;
+    try { seen = !!localStorage.getItem(liveKey(s)); } catch (e) {}
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const mm0 = myName ? (s.lastWeek || []).find(m => m.home === myName || m.away === myName) : null;
+    LIVE.done = !!(seen || reduce || window.FL_FAST === true || !mm0);
+    if (!LIVE.done) {
+      if (LIVE.timer) clearInterval(LIVE.timer);
+      LIVE.timer = setInterval(() => {
+        LIVE.clock += 2;
+        if (!STATE || !STATE.lock || !STATE.lock.active) { finishLive(s); return; }
+        const mmNow = myName ? (STATE.lastWeek || []).find(m => m.home === myName || m.away === myName) : null;
+        if (!mmNow) { finishLive(STATE); return; }
+        if (LIVE.clock > 94) { finishLive(STATE); return; }
+        renderLiveFrame(STATE, mmNow);
+      }, 380);
+    }
+  }
+  if (!LIVE.done) {
+    const mmL = myName ? (s.lastWeek || []).find(m => m.home === myName || m.away === myName) : null;
+    if (mmL) { renderLiveFrame(s, mmL); return; }
+    LIVE.done = true;
+  }
   const lastH = s.history && s.history.length ? s.history[s.history.length-1] : null;
   const myChamp = lastH ? ((lastH.champions && s.myLeague && lastH.champions[s.myLeague]) || lastH.champion) : null;
   const champLine = (lock.week === (s.totalRounds || 38) && myChamp)
@@ -1447,6 +1651,7 @@ function renderMatchday(s) {
   });
   $("mdCupsPanel").classList.toggle("hidden", !cupHtml);
   $("mdCups").innerHTML = cupHtml;
+  renderPens(s);
   if (s.you === s.host) {
     const finalWeek = s.round >= (s.totalRounds || 38);
     const more = finalWeek
