@@ -356,6 +356,97 @@ function makeFixtures(teamNames) {
 // ---------- team strength ----------
 function avail(p) { return p && !(p.inj > 0) && !(p.ban > 0); }
 
+// detailed positions: GK, RB CB LB, CDM CM CAM, RW ST LW
+const ROLE_POOL = {
+  GK: ["GK"],
+  DF: ["RB", "CB", "CB", "CB", "LB"],
+  MF: ["CDM", "CM", "CM", "CAM"],
+  FW: ["RW", "ST", "ST", "LW"]
+};
+// real players get the position they actually play in real life
+const ROLE_GROUP = { GK: "GK", RB: "DF", CB: "DF", LB: "DF", CDM: "MF", CM: "MF", CAM: "MF", RW: "FW", ST: "FW", LW: "FW" };
+const REAL_ROLES = {
+  "Erling Haaland": "ST", "Kylian Mbappe": "ST", "Harry Kane": "ST", "Ousmane Dembele": "ST", "Alexander Isak": "ST",
+  "Viktor Gyokeres": "ST", "Victor Osimhen": "ST", "Julian Alvarez": "ST", "Lautaro Martinez": "ST", "Robert Lewandowski": "ST",
+  "Dusan Vlahovic": "ST", "Hugo Ekitike": "ST", "Benjamin Sesko": "ST", "Ollie Watkins": "ST", "Jean-Philippe Mateta": "ST",
+  "Randal Kolo Muani": "ST", "Goncalo Ramos": "ST", "Vangelis Pavlidis": "ST", "Serhou Guirassy": "ST", "Rasmus Hojlund": "ST",
+  "Romelu Lukaku": "ST", "Darwin Nunez": "ST", "Ivan Toney": "ST", "Jonathan David": "ST", "Moise Kean": "ST",
+  "Mateo Retegui": "ST", "Lois Openda": "ST", "Alexander Sorloth": "ST", "Dominic Solanke": "ST", "Jorgen Strand Larsen": "ST",
+  "Nick Woltemade": "ST", "Samu Aghehowa": "ST", "Marcus Thuram": "ST", "Patrik Schick": "ST", "Yoane Wissa": "ST",
+  "Igor Thiago": "ST", "Evanilson": "ST", "Joao Pedro": "ST", "Cristiano Ronaldo": "ST", "Karim Benzema": "ST",
+  "Antoine Griezmann": "ST", "Kai Havertz": "ST", "Ferran Torres": "ST", "Georges Mikautadze": "ST", "Oyarzabal": "ST",
+  "Matheus Cunha": "ST", "Charles De Ketelaere": "ST", "Christopher Nkunku": "ST", "Joao Felix": "ST", "Gabriel Jesus": "ST",
+  "Georginio Rutter": "ST", "Loïs Openda": "ST", "Omar Marmoush": "ST", "Jonathan Burkardt": "ST", "Tolu Arokodare": "ST",
+  "Lamine Yamal": "RW", "Bukayo Saka": "RW", "Mohamed Salah": "RW", "Michael Olise": "RW", "Rodrygo": "RW",
+  "Cole Palmer": "RW", "Desire Doue": "RW", "Lionel Messi": "RW", "Takefusa Kubo": "RW", "Jarrod Bowen": "RW",
+  "Noni Madueke": "RW", "Pedro Neto": "RW", "Estevao": "RW", "Amad Diallo": "RW", "Mohammed Kudus": "RW",
+  "Antony": "RW", "Moussa Diaby": "RW", "Bryan Mbeumo": "RW", "Savinho": "RW", "Anthony Elanga": "RW",
+  "Brahim Diaz": "RW", "Giuliano Simeone": "RW", "Paulo Dybala": "RW", "Christian Pulisic": "RW", "Leroy Sane": "RW",
+  "David Neres": "RW", "Matias Soule": "RW", "Francisco Conceicao": "RW", "Riccardo Orsolini": "RW", "Ismaila Sarr": "RW",
+  "Brennan Johnson": "RW", "Yankuba Minteh": "RW", "Franco Mastantuono": "RW", "Inaki Williams": "RW", "Mason Greenwood": "RW",
+  "Maghnes Akliouche": "RW", "Dango Ouattara": "RW", "Raheem Sterling": "RW",
+  "Vinicius Junior": "LW", "Raphinha": "LW", "Khvicha Kvaratskhelia": "LW", "Nico Williams": "LW", "Rafael Leao": "LW",
+  "Luis Diaz": "LW", "Bradley Barcola": "LW", "Cody Gakpo": "LW", "Gabriel Martinelli": "LW", "Eberechi Eze": "LW",
+  "Jeremy Doku": "LW", "Kaoru Mitoma": "LW", "Anthony Gordon": "LW", "Son Heung-min": "LW", "Ademola Lookman": "LW",
+  "Alejandro Garnacho": "LW", "Jack Grealish": "LW", "Marcus Rashford": "LW", "Kenan Yildiz": "LW", "Kingsley Coman": "LW",
+  "Karim Adeyemi": "LW", "Noa Lang": "LW", "Igor Paixao": "LW", "Jamie Gittens": "LW", "Harvey Barnes": "LW",
+  "Iliman Ndiaye": "LW", "Malick Fofana": "LW", "Leandro Trossard": "LW", "Antoine Semenyo": "LW", "Nicolas Gonzalez": "LW",
+  "Kevin Schade": "LW", "Neymar": "LW", "Justin Kluivert": "LW", "Donyell Malen": "LW",
+  "Rodri": "CDM", "Declan Rice": "CDM", "Martin Zubimendi": "CDM", "Moises Caicedo": "CDM", "Aurelien Tchouameni": "CDM",
+  "Ryan Gravenberch": "CDM", "Joshua Kimmich": "CDM", "Hakan Calhanoglu": "CDM", "Casemiro": "CDM", "Joao Palhinha": "CDM",
+  "Boubacar Kamara": "CDM", "Stanislav Lobotka": "CDM", "Amadou Onana": "CDM", "Carlos Baleba": "CDM", "Romeo Lavia": "CDM",
+  "Adam Wharton": "CDM", "Ruben Neves": "CDM", "Morten Hjulmand": "CDM", "Alan Varela": "CDM", "Denis Zakaria": "CDM",
+  "Pierre-Emile Hojbjerg": "CDM", "N'Golo Kante": "CDM", "Marc Casado": "CDM", "Manuel Locatelli": "CDM", "Samuele Ricci": "CDM",
+  "Wilfred Ndidi": "CDM", "Angelo Stiller": "CDM", "Aleksandar Pavlovic": "CDM", "Wataru Endo": "CDM",
+  "Pedri": "CM", "Vitinha": "CM", "Federico Valverde": "CM", "Alexis Mac Allister": "CM", "Nicolo Barella": "CM",
+  "Enzo Fernandez": "CM", "Bruno Guimaraes": "CM", "Sandro Tonali": "CM", "Joao Neves": "CM", "Frenkie de Jong": "CM",
+  "Eduardo Camavinga": "CM", "Fabian Ruiz": "CM", "Youri Tielemans": "CM", "Mikel Merino": "CM", "John McGinn": "CM",
+  "Tijjani Reijnders": "CM", "Scott McTominay": "CM", "Bernardo Silva": "CM", "Luka Modric": "CM", "Rodrigo Bentancur": "CM",
+  "Pape Matar Sarr": "CM", "Mateo Kovacic": "CM", "Kobbie Mainoo": "CM", "Curtis Jones": "CM", "Adrien Rabiot": "CM",
+  "Khephren Thuram": "CM", "Elliot Anderson": "CM", "Joelinton": "CM", "Manu Kone": "CM", "Exequiel Palacios": "CM",
+  "Frank Anguissa": "CM", "Granit Xhaka": "CM", "Joao Gomes": "CM", "Warren Zaire-Emery": "CM", "Rodrigo De Paul": "CM",
+  "Javi Guerra": "CM", "Davide Frattesi": "CM", "Youssouf Fofana": "CM", "Aleix Garcia": "CM", "Conor Gallagher": "CM",
+  "Ederson": "CM", "Orkun Kokcu": "CM", "Joey Veerman": "CM", "Gavi": "CM", "Pablo Barrios": "CM", "Hugo Larsson": "CM",
+  "Nico Gonzalez": "CM", "Teun Koopmeiners": "CM", "Pedro Goncalves": "CAM",
+  "Jude Bellingham": "CAM", "Florian Wirtz": "CAM", "Martin Odegaard": "CAM", "Bruno Fernandes": "CAM", "Kevin De Bruyne": "CAM",
+  "Phil Foden": "CAM", "Dominik Szoboszlai": "CAM", "Dani Olmo": "CAM", "James Maddison": "CAM", "Rayan Cherki": "CAM",
+  "Arda Guler": "CAM", "Nico Paz": "CAM", "Xavi Simons": "CAM", "Thiago Almada": "CAM", "Lucas Paqueta": "CAM",
+  "Fermin Lopez": "CAM", "Oihan Sancet": "CAM", "Alex Baena": "CAM", "Mikkel Damsgaard": "CAM", "Giovani Lo Celso": "CAM",
+  "Emiliano Buendia": "CAM", "Kang-in Lee": "CAM",
+  "Achraf Hakimi": "RB", "Trent Alexander-Arnold": "RB", "Jules Kounde": "RB", "Reece James": "RB", "Jeremie Frimpong": "RB",
+  "Pedro Porro": "RB", "Denzel Dumfries": "RB", "Jurrien Timber": "RB", "Ben White": "RB", "Matty Cash": "RB",
+  "Tino Livramento": "RB", "Noussair Mazraoui": "RB", "Daniel Munoz": "RB", "Joao Cancelo": "RB", "Nahuel Molina": "RB",
+  "Diogo Dalot": "RB", "Malo Gusto": "RB", "Giovanni Di Lorenzo": "RB", "Konrad Laimer": "RB", "Benjamin White": "RB",
+  "Matheus Nunes": "RB", "Amar Dedic": "RB", "Sacha Boey": "RB", "Vanderson": "RB",
+  "Nuno Mendes": "LB", "Marc Cucurella": "LB", "Federico Dimarco": "LB", "Alphonso Davies": "LB", "Theo Hernandez": "LB",
+  "Alejandro Grimaldo": "LB", "Alejandro Balde": "LB", "Antonee Robinson": "LB", "Milos Kerkez": "LB", "Rayan Ait-Nouri": "LB",
+  "Alvaro Carreras": "LB", "David Raum": "LB", "Pervis Estupinan": "LB", "Destiny Udogie": "LB", "Andrea Cambiaso": "LB",
+  "Riccardo Calafiori": "LB", "Jorrel Hato": "LB", "Lucas Digne": "LB", "Rico Henry": "LB", "Adrien Truffert": "LB",
+  "William Saliba": "CB", "Gabriel Magalhaes": "CB", "Virgil van Dijk": "CB", "Alessandro Bastoni": "CB", "Ruben Dias": "CB",
+  "Marc Guehi": "CB", "Ibrahima Konate": "CB", "Josko Gvardiol": "CB", "Cristian Romero": "CB", "Pau Cubarsi": "CB",
+  "Gleison Bremer": "CB", "Willian Pacho": "CB", "Matthijs de Ligt": "CB", "Micky van de Ven": "CB", "Dean Huijsen": "CB",
+  "Eder Militao": "CB", "Dayot Upamecano": "CB", "Marquinhos": "CB", "Ezri Konsa": "CB", "Pau Torres": "CB",
+  "Levi Colwill": "CB", "Jarrad Branthwaite": "CB", "Lisandro Martinez": "CB", "Sven Botman": "CB", "Murillo": "CB",
+  "Ronald Araujo": "CB", "Robin Le Normand": "CB", "Jonathan Tah": "CB", "Nico Schlotterbeck": "CB", "John Stones": "CB",
+  "Leny Yoro": "CB", "Nikola Milenkovic": "CB", "Antonio Rudiger": "CB", "Benjamin Pavard": "CB", "Manuel Akanji": "CB",
+  "Alessandro Buongiorno": "CB", "Marcos Senesi": "CB", "Jan Paul van Hecke": "CB", "Maxence Lacroix": "CB", "Nathan Ake": "CB",
+  "Jose Maria Gimenez": "CB", "David Hancko": "CB", "Dani Vivian": "CB", "Fikayo Tomori": "CB", "Minjae Kim": "CB",
+  "Edmond Tapsoba": "CB", "Illia Zabarnyi": "CB", "Antonio Silva": "CB", "Goncalo Inacio": "CB", "Nathan Collins": "CB",
+  "Trevoh Chalobah": "CB", "Joachim Andersen": "CB", "Malick Thiaw": "CB", "Federico Gatti": "CB", "Strahinja Pavlovic": "CB",
+  "Leonardo Balerdi": "CB", "Castello Lukeba": "CB", "Evan Ndicka": "CB", "Ousmane Diomande": "CB", "Benjamin Pavard OM": "CB",
+  "Ethan Pinnock": "CB", "Sepp van den Berg": "CB", "Tyrone Mings": "CB", "Tosin Adarabioyo": "CB", "Ko Itakura": "CB"
+};
+function ensureRoles(game) {
+  for (const p of Object.values(game.players || {})) {
+    const want = REAL_ROLES[p.name];
+    if (want && ROLE_GROUP[want] === p.pos) { p.role = want; continue; }
+    if (!p.role || (p.role === p.pos && p.pos !== "GK")) {
+      const pool = ROLE_POOL[p.pos] || ["CM"];
+      p.role = pool[Math.floor(Math.random() * pool.length)];
+    }
+  }
+}
+
 function bestXI(game, teamName) {
   const ids = game.clubs[teamName].squad;
   const squad = ids.map(id => game.players[id]).filter(avail);
@@ -472,6 +563,7 @@ function spawnAcademy(game, clubName) {
   if (!game.playerSeq) game.playerSeq = Math.max(...Object.keys(game.players).map(Number)) + 1;
   club.academy = [];
   addAcademyIntake(game, clubName, 4);
+  ensureRoles(game);
 }
 
 function refreshAcademies(game) {
@@ -554,6 +646,7 @@ function newGame(hostName) {
   log(game, "Game created. Waiting in the lobby.");
   games[game.code] = game;
   save();
+  ensureRoles(game);
   return game;
 }
 
@@ -723,6 +816,12 @@ function aiWeakestSpot(game, club) {
   for (const [pos, min] of [["GK", 2], ["DF", 5], ["MF", 5], ["FW", 3]]) {
     if (byPos[pos].length < min) return { pos, floor: 0 };
   }
+  // one objective: win. find the weakest STARTER and replace him with better
+  const xi = bestXI(game, club.name);
+  if (xi.length) {
+    const weakest = [...xi].sort((a, b) => a.rating - b.rating)[0];
+    return { pos: weakest.pos, floor: weakest.rating };
+  }
   let worstPos = "MF", worstRating = 100;
   for (const pos of ["GK", "DF", "MF", "FW"]) {
     const best = byPos[pos].sort((a, b) => b.rating - a.rating).slice(0, pos === "GK" ? 1 : 3);
@@ -756,11 +855,12 @@ function aiToAiTransfers(game) {
       !humanOf(game, p.club) && game.clubs[p.club] &&
       (game.leagueFixtures || {})[p.league] &&
       game.clubs[p.club].squad.length > 15 &&
-      (wantKid ? (p.age <= 21 && p.rating >= 76) : (p.pos === need.pos && p.rating >= need.floor + 2)) &&
-      p.value <= buyer.budget * 0.85 && p.value >= 2);
+      (wantKid ? (p.age <= 21 && p.rating >= 76) : (p.pos === need.pos && p.rating >= need.floor + 3)) &&
+      p.value <= buyer.budget * 0.9 && p.value >= 2);
     if (!pool.length) continue;
     pool.sort((a, b) => b.rating - a.rating);
-    const target = pool[Math.floor(Math.random() * Math.min(6, pool.length))];
+    const reach = buyer.budget >= 120 ? 3 : 6;
+    const target = pool[Math.floor(Math.random() * Math.min(reach, pool.length))];
     const seller = game.clubs[target.club];
     // clubs fight to keep their best player unless the money is silly
     const isCrown = seller.squad.map(id => game.players[id]).filter(Boolean)
@@ -799,11 +899,12 @@ function aiInboundBids(game) {
     const club = game.clubs[user.team];
     const candidates = club.squad.map(id => game.players[id]).filter(p => p && !p.loanOwner && (p.listed || p.rating >= 84));
     if (!candidates.length) continue;
-    const chance = candidates.some(p => p.listed) ? 0.75 : 0.16;
+    const chance = candidates.some(p => p.listed) ? 0.75 : 0.3;
     if (Math.random() > chance) continue;
     const listed = candidates.filter(p => p.listed);
     const target = (listed.length ? listed : candidates)[Math.floor(Math.random() * (listed.length ? listed.length : candidates.length))];
-    const fee = Math.round(target.value * (target.listed ? (0.85 + Math.random() * 0.3) : (0.95 + Math.random() * 0.45)) * 10) / 10;
+    const starHunger = !target.listed && target.rating >= 86 ? 0.15 : 0;
+    const fee = Math.round(target.value * (target.listed ? (0.85 + Math.random() * 0.3) : (0.95 + starHunger + Math.random() * 0.45)) * 10) / 10;
     const bidders = Object.values(game.clubs).filter(c => c.name !== user.team && !humanOf(game, c.name) && c.budget >= fee && c.squad.length < 30);
     if (!bidders.length) continue;
     bidders.sort((a, b) => b.budget - a.budget);
@@ -1022,6 +1123,7 @@ function endOfSeason(game) {
     }
     club.trainGained = 0;
   }
+  ensureRoles(game);
   log(game, `SEASON ${game.season} OVER. Budgets reset for everyone, title winners bank £10m and cup winners £5m each. New fixtures and cup draws are in.`);
   game.season++;
   game.round = 0;
@@ -1107,6 +1209,7 @@ function endOfSeason(game) {
   }
   game.cups = makeAllCups(game);
   refreshAcademies(game);
+  ensureRoles(game);
 }
 
 // national squads get call ups from the league most of their players are in,
@@ -1171,6 +1274,7 @@ function migrate(game) {
   if (!game.lastEvents) game.lastEvents = {};
   if (!game.reacts) game.reacts = [];
   if (!game.shootouts) game.shootouts = {};
+  ensureRoles(game);
   for (const u of Object.values(game.users || {})) if (u.sacked === undefined) u.sacked = false;
   for (const c of Object.values(game.clubs || {})) if (c.baseBudget === undefined) c.baseBudget = c.budget;
   if (!game.cups) game.cups = {};
@@ -1885,7 +1989,7 @@ app.get("/api/state", (req, res) => {
       ? Object.values(game.players)
           .filter(p => p.club !== myTeam && !p.academy && !p.loanOwner && p.age <= 21 && p.rating >= 79)
           .sort((a, b) => b.rating - a.rating).slice(0, 5)
-          .map(p => ({ name: p.name, club: p.club, pos: p.pos, age: p.age, rating: p.rating, value: p.value }))
+          .map(p => ({ name: p.name, club: p.club, pos: p.pos, role: p.role, age: p.age, rating: p.rating, value: p.value }))
       : null,
     myNation: user.nation || null,
     nations: Object.values(game.nations || {}).map(n => {

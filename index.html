@@ -157,8 +157,9 @@ tr.me td{background:rgba(255,180,36,.06)}
 .pitchwrap{display:grid;place-items:center;padding:22px 10px;background:#0d110c;border-right:1px solid var(--line)}
 @media(max-width:980px){.pitchwrap{border-right:none;border-bottom:1px solid var(--line)}}
 #pitch{position:relative;width:100%;max-width:400px;aspect-ratio:10/13;border:1px solid var(--pline);background:var(--pitchbg)}
-#pitch::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--pline)}
-#pitch::after{content:"";position:absolute;left:50%;top:50%;width:26%;aspect-ratio:1;border:1px solid var(--pline);border-radius:50%;transform:translate(-50%,-50%)}
+#pitch::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--pline);pointer-events:none}
+#pitch::after{content:"";position:absolute;left:50%;top:50%;width:26%;aspect-ratio:1;border:1px solid var(--pline);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0}
+.luslot{z-index:1}
 .pbox{position:absolute;left:50%;width:52%;height:12%;border:1px solid var(--pline);transform:translateX(-50%);pointer-events:none}
 .pbox.top{top:0;border-top:none}
 .pbox.bot{bottom:0;border-bottom:none}
@@ -1087,7 +1088,7 @@ function render() {
            ${p.age <= 23 ? `<button class="small ghost" onclick="loanOut(${p.id})">Loan out</button>` : ""}`;
       return `
       <tr><td>${p.name} ${tags}</td>
-      <td class="pos-${p.pos}">${p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
+      <td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
       <td class="num">${money(p.value)}</td>
       <td style="white-space:nowrap">${acts}</td></tr>`;
     }).join("");
@@ -1206,7 +1207,7 @@ function render() {
   // academy
   if (s.myClub) {
     $("academyBody").innerHTML = (s.myClub.academy || []).map(p => `
-      <tr><td>${p.name}</td><td class="pos-${p.pos}">${p.pos}</td><td class="num">${p.age}</td>
+      <tr><td>${p.name}</td><td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td>
       <td class="num">${p.rating}</td><td class="num">${p.pot || "?"}</td>
       <td><button class="small" onclick="promote(${p.id})">Promote</button></td></tr>`).join("") ||
       "<tr><td colspan='6' style='color:var(--dim)'>No academy players right now. A new intake arrives every season.</td></tr>";
@@ -1214,7 +1215,7 @@ function render() {
       if (s.scoutTips) {
         $("scoutBox").innerHTML = `<div class="mlab">SCOUT REPORT \u00b7 BEST YOUNG TALENT ON THE MARKET</div>
           <table style="margin-top:8px"><thead><tr><th>Player</th><th>Club</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th class="num">Value</th></tr></thead><tbody>` +
-          s.scoutTips.map(p => `<tr><td>${p.name}</td><td>${p.club}</td><td class="pos-${p.pos}">${p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td><td class="num">${money(p.value)}</td></tr>`).join("") +
+          s.scoutTips.map(p => `<tr><td>${p.name}</td><td>${p.club}</td><td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td><td class="num">${money(p.value)}</td></tr>`).join("") +
           `</tbody></table>`;
       } else {
         $("scoutBox").innerHTML = `<p style="color:var(--faint);font-size:12.5px">Hire a chief scout (Squad tab) and a weekly report on the best young talent in the world lands here.</p>`;
@@ -1375,7 +1376,7 @@ function renderLineup() {
     const p = id !== null ? luPlayer(id) : null;
     const selCls = (p && LB.sel === id) ? " luSel" : "";
     const inner = p
-      ? `<span class="luball">${p.rating}<span class="luX" onclick="luSlotClear(${i},event)">\u00d7</span></span><span class="luplate">${luShort(p.name)}</span><span class="luage">${p.age}Y</span>`
+      ? `<span class="luball">${p.rating}<span class="luX" onclick="luSlotClear(${i},event)">\u00d7</span></span><span class="luplate">${luShort(p.name)}</span><span class="luage">${p.age}Y \u00b7 ${p.role || p.pos}</span>`
       : `<span class="luball">+</span><span class="luplate">${slot.l}</span>`;
     return `<div class="luslot${p ? " lufilled" : ""}${slot.gk ? " gk" : ""}${selCls}" style="left:${slot.x}%;top:${slot.y}%"
       data-slot="${i}" onclick="luSlotTap(${i})" ondragover="event.preventDefault()"
@@ -1394,7 +1395,7 @@ function renderLineup() {
       ? `<span class="tag inj">${p.inj > 0 ? "INJ " + p.inj + "W" : "BAN"}</span>`
       : `<button class="small" onclick="luQuickStart(${p.id},event)">Start</button><button class="small ghost" onclick="luBench(${p.id},event)">Sub</button>`;
     return `<div class="benchrow${LB.sel === p.id ? " sel" : ""}${out ? "" : ""}" ${out ? "" : 'draggable="true"'} ondragstart="luDrag(event,${p.id})"
-      onclick="${out ? "" : "luPoolTap(" + p.id + ")"}" style="${out ? "opacity:.5" : ""}"><span class="bp pos-${p.pos}">${p.pos}</span>
+      onclick="${out ? "" : "luPoolTap(" + p.id + ")"}" style="${out ? "opacity:.5" : ""}"><span class="bp pos-${p.pos}">${p.role || p.pos}</span>
       <span class="bn">${p.name} <span>${p.age}Y</span> <b>${p.rating}</b></span>
       <span class="ba">${acts}</span></div>`;
   }).join("") ||
@@ -1402,7 +1403,7 @@ function renderLineup() {
   $("subCount").textContent = LB.subs.length + "/9";
   $("subList").innerHTML = LB.subs.map(id => {
     const p = luPlayer(id); if (!p) return "";
-    return `<div class="benchrow" onclick="luUnbench(${p.id})" title="Tap to pull him off the bench"><span class="bp pos-${p.pos}">${p.pos}</span>
+    return `<div class="benchrow" onclick="luUnbench(${p.id})" title="Tap to pull him off the bench"><span class="bp pos-${p.pos}">${p.role || p.pos}</span>
       <span class="bn">${p.name} <span>${p.age}Y</span> <b>${p.rating}</b></span>
       <span class="ba"><button class="small red">\u00d7</button></span></div>`;
   }).join("") || "<p style='color:var(--dim);font-size:13px;padding:4px 18px'>No subs yet.</p>";
@@ -1891,7 +1892,7 @@ async function loadMarket() {
         (p.humanOwned || p.rating > 85 ? "" : ` <button class="small ghost" onclick="loanIn(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Loan</button>`);
       return `
       <tr><td>${p.name} ${p.humanOwned?'<span class="tag human">Human club</span>':''} ${p.listed?'<span class="tag listed">Listed</span>':''} ${onLoan?'<span class="tag loan">Loan</span>':''}</td>
-      <td>${p.club}</td><td class="pos-${p.pos}">${p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
+      <td>${p.club}</td><td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
       <td class="num">${money(p.value)}</td><td class="num">${money(p.asking)}</td>
       <td style="white-space:nowrap">${acts}</td></tr>`;
     }).join("");
