@@ -101,6 +101,7 @@ const EXTRA_CLUBS = {
     ["Riccardo Orsolini","FW",28,80],["Ciro Immobile","FW",35,74],["Federico Bernardeschi","FW",31,74]
   ]},
   "Como": { league: "Serie A", squad: [
+    ["Robert Sanchez","GK",28,81],
     ["Moise Kean","FW",25,82],
     ["Trevoh Chalobah","DF",26,80],
     ["Jean Butez","GK",30,74],
@@ -241,7 +242,7 @@ const EXTRA_CLUBS = {
   ]},
   "Strasbourg": { league: "Ligue 1", squad: [
     ["Mike Penders","GK",20,77],
-    ["Mamadou Sarr","DF",20,76],["Ben Chilwell","DF",29,76],["Ismael Doukoure","DF",22,74],
+    ["Julien Barre","DF",21,71],["Ben Chilwell","DF",29,76],["Ismael Doukoure","DF",22,74],
     ["Valentin Barco","MF",21,76],["Kendry Paez","MF",18,76],["Samir Caetano","DF",26,72],
     ["Emanuel Emegha","FW",23,79],["Dilane Bakwa","FW",23,78],["Joaquin Panichelli","FW",23,77],["Abdoul Ouattara","FW",20,74]
   ]},

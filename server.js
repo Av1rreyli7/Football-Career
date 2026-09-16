@@ -365,7 +365,22 @@ const ROLE_POOL = {
 };
 // real players get the position they actually play in real life
 const ROLE_GROUP = { GK: "GK", RB: "DF", CB: "DF", LB: "DF", CDM: "MF", CM: "MF", CAM: "MF", RW: "FW", ST: "FW", LW: "FW" };
+const REAL_LOANS = {
+  "Andre Onana": "Man United",
+  "Omar Marmoush": "Man City",
+  "Alejandro Garnacho": "Chelsea",
+  "Ronald Araujo": "Barcelona",
+  "Jack Grealish": "Man City",
+  "Evann Guessand": "Crystal Palace",
+  "Robert Sanchez": "Chelsea",
+  "Mamadou Sarr": "Chelsea",
+  "Axel Disasi": "Chelsea",
+  "Benoit Badiashile": "Chelsea",
+  "Ethan Nwaneri": "Arsenal",
+  "Mykhailo Mudryk": "Chelsea"
+};
 const REAL_ROLES = {
+  "JJ Gabriel": "ST",
   "Erling Haaland": "ST", "Kylian Mbappe": "ST", "Harry Kane": "ST", "Ousmane Dembele": "ST", "Alexander Isak": "ST",
   "Viktor Gyokeres": "ST", "Victor Osimhen": "ST", "Julian Alvarez": "ST", "Lautaro Martinez": "ST", "Robert Lewandowski": "ST",
   "Dusan Vlahovic": "ST", "Hugo Ekitike": "ST", "Benjamin Sesko": "ST", "Ollie Watkins": "ST", "Jean-Philippe Mateta": "ST",
@@ -614,6 +629,10 @@ function newGame(hostName) {
   const { players, clubs } = buildDatabase();
   const playerMap = {};
   players.forEach(p => playerMap[p.id] = p);
+  for (const p of players) {
+    const owner = REAL_LOANS[p.name];
+    if (owner && clubs[owner] && p.club !== owner) p.loanOwner = owner;
+  }
   for (const c of Object.values(clubs)) c.tactic = "balanced";
   newGameMarkBudgets(clubs);
   const premTeams = Object.values(clubs).filter(c => c.prem).map(c => c.name);
@@ -898,6 +917,58 @@ function aiToAiTransfers(game) {
       posts++;
       log(game, `TRANSFER: ${target.name} joins ${buyer.name} from ${from} for £${fee}m.`);
       if (target.rating >= 86) romano(game, `🚨✅ HERE WE GO! ${target.name} to ${buyer.name}, done deal! ${fmtFee(fee)} to ${from}. The AI clubs are spending big this window.`);
+    }
+  }
+}
+
+function aiLoans(game) {
+  if (!windowOpen(game)) return;
+  const frenzy = deadlineDay(game);
+  const aiClubs = Object.values(game.clubs).filter(c =>
+    !humanOf(game, c.name) && (game.leagueFixtures || {})[c.league]);
+  const borrowers = shuffle(aiClubs.filter(c => c.squad.length < 28))
+    .sort((a, b) => ((a.budget < 12 ? 0 : 1) - (b.budget < 12 ? 0 : 1)));
+  const humanLeagues = new Set(Object.values(game.users).filter(u => u.team && game.clubs[u.team]).map(u => game.clubs[u.team].league));
+  let done = 0, posts = 0;
+  const cap = frenzy ? 6 : 3;
+  for (const club of borrowers) {
+    if (done >= cap) break;
+    const needy = club.budget < 12;
+    if (Math.random() > (needy ? (frenzy ? 0.9 : 0.7) : (frenzy ? 0.55 : 0.3))) continue;
+    const loansIn = club.squad.map(id => game.players[id]).filter(x => x && x.loanOwner && x.loanOwner !== club.name).length;
+    if (loansIn >= 3) continue;
+    const need = aiWeakestSpot(game, club);
+    const pool = Object.values(game.players).filter(p =>
+      p.club !== club.name && !p.academy && !p.loanOwner && !p.listed &&
+      !humanOf(game, p.club) && game.clubs[p.club] &&
+      (game.leagueFixtures || {})[p.league] &&
+      game.clubs[p.club].squad.length > 16 &&
+      p.pos === need.pos && p.age <= 24 && p.rating >= 70 && p.rating <= 82 &&
+      Math.max(0.5, Math.round(p.value * 0.1 * 10) / 10) <= club.budget);
+    if (!pool.length) continue;
+    const p = pool[Math.floor(Math.random() * pool.length)];
+    const owner = game.clubs[p.club];
+    if (p.pos === "GK" && owner.squad.map(id => game.players[id]).filter(x => x && x.pos === "GK").length < 3) continue;
+    const fee = Math.max(0.5, Math.round(p.value * 0.1 * 10) / 10);
+    if (club.budget < fee) continue;
+    club.budget = Math.round((club.budget - fee) * 10) / 10;
+    owner.budget = Math.round((owner.budget + fee) * 10) / 10;
+    owner.squad = owner.squad.filter(id => id !== p.id);
+    stripFromLineup(owner, p.id);
+    club.squad.push(p.id);
+    p.loanOwner = owner.name;
+    p.loanFee = fee;
+    p.club = club.name;
+    p.league = club.league;
+    voidOtherOffers(game, p.id, -1);
+    game.aiLoanDeals = (game.aiLoanDeals || 0) + 1;
+    done++;
+    if (posts < 3) {
+      posts++;
+      log(game, `LOAN: ${p.name} joins ${club.name} on loan from ${owner.name} until the end of the season.`);
+    }
+    if ((p.rating >= 80 || humanLeagues.has(club.league) || humanLeagues.has(owner.league)) && posts <= 3) {
+      romano(game, `\ud83d\udfe1 Loan deal done: ${p.name} moves to ${club.name} on loan, ${owner.name} keep his future in their hands.`);
     }
   }
 }
@@ -1581,6 +1652,7 @@ app.post("/api/sim", (req, res) => {
   simCupsForWeek(game);
   aiInboundBids(game);
   aiToAiTransfers(game);
+  aiLoans(game);
   if (game.round >= (game.totalRounds || 38)) log(game, `SEASON ${game.season}: that was the final matchweek. Awards are in the Tables tab. The host can start the next season when everyone is ready.`);
   const isOpen = windowOpen(game);
   if (game.windowWasOpen === true && !isOpen) romano(game, `⏳ The transfer window has SLAMMED SHUT. No more deals until it reopens. Time to judge every club's business.`);
