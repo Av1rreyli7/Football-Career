@@ -384,6 +384,8 @@ const RIVALRIES = [
 const RIVAL_SET = new Set(RIVALRIES.map(([a, b]) => a + "|" + b).concat(RIVALRIES.map(([a, b]) => b + "|" + a)));
 function isDerby(home, away) { return RIVAL_SET.has(home + "|" + away); }
 
+const PRODIGIES = new Set(["JJ Gabriel"]);
+
 const ROLE_LABELS = {
   GK: "Goalkeeper", RB: "Right Back", CB: "Centre Back", LB: "Left Back",
   CDM: "Defensive Midfielder", CM: "Central Midfielder", CAM: "Attacking Midfielder",
@@ -1289,8 +1291,10 @@ function endOfSeason(game) {
   // ageing: young players climb all the way to 35, then the drop starts
   for (const p of Object.values(game.players)) {
     p.age++;
+    p.prodigyGains = 0;
     const roll = Math.random();
-    if (p.age <= 21) p.rating = Math.min(96, p.rating + (roll < 0.35 ? 3 : roll < 0.75 ? 2 : 1));
+    if (p.prodigy && p.age <= 19) p.rating = Math.min(96, p.rating + (roll < 0.4 ? 5 : roll < 0.8 ? 4 : 3));
+    else if (p.age <= 21) p.rating = Math.min(96, p.rating + (roll < 0.35 ? 3 : roll < 0.75 ? 2 : 1));
     else if (p.age <= 27) p.rating = Math.min(96, p.rating + (roll < 0.3 ? 2 : roll < 0.75 ? 1 : 0));
     else if (p.age <= 34) p.rating = Math.min(96, p.rating + (roll < 0.45 ? 1 : 0));
     else if (p.age === 35) { /* peak holds one last year */ }
@@ -1437,6 +1441,7 @@ function migrate(game) {
   ensureRoles(game);
   for (const u of Object.values(game.users || {})) if (u.sacked === undefined) u.sacked = false;
   if (!game.unveil) game.unveil = { active: false, queue: [], seq: 0 };
+  for (const p of Object.values(game.players || {})) if (PRODIGIES.has(p.name) && !p.prodigy) p.prodigy = true;
   for (const c of Object.values(game.clubs || {})) if (c.baseBudget === undefined) c.baseBudget = c.budget;
   if (!game.cups) game.cups = {};
   for (const u of Object.values(game.users || {})) if (u.nation === undefined) u.nation = null;
@@ -1667,6 +1672,17 @@ function playMatchweek(game) {
   for (const p of Object.values(game.players)) {
     if (p.inj > 0) { p.inj--; if (p.inj === 0 && humanOf(game, p.club)) log(game, `${p.name} (${p.club}) is back from injury and available again.`); }
     if (p.ban > 0) p.ban--;
+    if (p.prodigy && p.age <= 19 && p.rating < 90 && !(p.inj > 0) && (p.prodigyGains || 0) < 3) {
+      const onDevLoan = p.loanOwner && p.loanOwner !== p.club;
+      if (Math.random() < (onDevLoan ? 0.12 : 0.08)) {
+        p.rating++;
+        p.prodigyGains = (p.prodigyGains || 0) + 1;
+        p.value = Math.max(p.value, marketValue(p.rating, p.age, p.pos));
+        if (humanOf(game, p.club) || (p.loanOwner && humanOf(game, p.loanOwner))) {
+          log(game, `WONDERKID WATCH: ${p.name} (${p.club}) keeps growing week by week. Now rated ${p.rating} at ${p.age}.`);
+        }
+      }
+    }
   }
   for (const [name, club] of Object.entries(game.clubs)) {
     if (!(LEAGUES[club.league] || {}).playable && !humanOf(game, name)) continue;

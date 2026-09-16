@@ -154,9 +154,9 @@ tr.me td{background:rgba(255,180,36,.06)}
 .furow.on{background:rgba(255,180,36,.06)}
 .furow.on .fn{color:var(--gold)}
 .furow .ft{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase}
-.pitchwrap{display:grid;place-items:center;padding:22px 10px;background:#0d110c;border-right:1px solid var(--line)}
+.pitchwrap{display:grid;place-items:start center;padding:22px 10px;background:#0d110c;border-right:1px solid var(--line)}
 @media(max-width:980px){.pitchwrap{border-right:none;border-bottom:1px solid var(--line)}}
-#pitch{position:relative;width:100%;max-width:400px;aspect-ratio:10/13;border:1px solid var(--pline);background:var(--pitchbg)}
+#pitch{position:sticky;top:14px;width:100%;max-width:400px;aspect-ratio:10/13;border:1px solid var(--pline);background:var(--pitchbg)}
 #pitch::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--pline);pointer-events:none}
 #pitch::after{content:"";position:absolute;left:50%;top:50%;width:26%;aspect-ratio:1;border:1px solid var(--pline);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0}
 .luslot{z-index:1}
