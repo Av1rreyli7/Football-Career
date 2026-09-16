@@ -434,7 +434,17 @@ const REAL_ROLES = {
   "Edmond Tapsoba": "CB", "Illia Zabarnyi": "CB", "Antonio Silva": "CB", "Goncalo Inacio": "CB", "Nathan Collins": "CB",
   "Trevoh Chalobah": "CB", "Joachim Andersen": "CB", "Malick Thiaw": "CB", "Federico Gatti": "CB", "Strahinja Pavlovic": "CB",
   "Leonardo Balerdi": "CB", "Castello Lukeba": "CB", "Evan Ndicka": "CB", "Ousmane Diomande": "CB", "Benjamin Pavard OM": "CB",
-  "Ethan Pinnock": "CB", "Sepp van den Berg": "CB", "Tyrone Mings": "CB", "Tosin Adarabioyo": "CB", "Ko Itakura": "CB"
+  "Ethan Pinnock": "CB", "Sepp van den Berg": "CB", "Tyrone Mings": "CB", "Tosin Adarabioyo": "CB", "Ko Itakura": "CB",
+  "Yan Diomande": "LW", "Jeremy Jacquet": "CB", "Victor Munoz": "RW", "Geovany Quenda": "RW", "Ayyoub Bouaddi": "CM",
+  "Bazoumana Toure": "RW", "Marco Palestra": "RB", "Valentin Barco": "LB", "Emmanuel Emegha": "ST", "Gonzalo Garcia": "ST",
+  "Johan Manzambi": "CM", "Aladji Bamba": "CM", "Sean Steur": "CM", "Kerim Alajbegovic": "LW", "Aleksandar Stankovic": "CDM",
+  "Costinha": "RB", "Mohamed-Ali Cho": "RW", "Merlin Rohl": "CM", "Tyrique George": "LW", "Anan Khalaili": "RB",
+  "Oscar Mingueza": "RB", "Nico Elvedi": "CB", "Tarik Muharemovic": "CB", "Anel Ahmedhodzic": "CB", "Gustavo Hamer": "CM",
+  "Caleb Yirenkyi": "CM", "Aurele Amenda": "CB", "Alvaro Rodriguez": "ST", "Andrey Santos": "CM", "El Hadji Malick Diouf": "LB",
+  "Mateus Fernandes": "CM", "Jonathan Rowe": "LW", "Diego Moreira": "LW", "Santiago Castro": "ST", "Mario Gila": "CB",
+  "Jhon Lucumi": "CB", "Miguel Gutierrez": "LB", "Guela Doue": "RB", "Xaver Schlager": "CDM", "Maxime Esteve": "CB",
+  "Hayden Hackney": "CM", "Beto": "ST", "Moise Kean": "ST", "Daizen Maeda": "LW", "Sasa Lukic": "CM",
+  "Arne Engels": "CM", "Manor Solomon": "LW", "Piero Hincapie": "CB", "Christos Tzolis": "LW", "Emiliano Buendia": "CAM"
 };
 function ensureRoles(game) {
   for (const p of Object.values(game.players || {})) {
@@ -1788,6 +1798,39 @@ app.post("/api/loanout", (req, res) => {
   res.json({ ok: true });
 });
 
+// recall fee scales with value: big names cost about 5m to bring home, small names about 300k
+function recallFee(p) {
+  return Math.min(5, Math.max(0.3, Math.round((p.value || 1) * 0.05 * 10) / 10));
+}
+
+app.post("/api/recall", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  if (!game.started) return res.status(400).json({ error: "Nothing to recall before the season starts." });
+  const p = game.players[Number(req.body.playerId)];
+  if (!p || p.loanOwner !== user.team || p.club === user.team) return res.status(400).json({ error: "That player is not out on loan from your club." });
+  const club = game.clubs[user.team];
+  const holder = game.clubs[p.club];
+  const fee = recallFee(p);
+  if (club.budget < fee) return res.status(400).json({ error: `Recalling ${p.name} costs ${fee}m in compensation and you can't cover it.` });
+  club.budget = Math.round((club.budget - fee) * 10) / 10;
+  if (holder) {
+    holder.budget = Math.round(((holder.budget || 0) + fee) * 10) / 10;
+    holder.squad = holder.squad.filter(id => id !== p.id);
+    stripFromLineup(holder, p.id);
+  }
+  const from = p.club;
+  club.squad.push(p.id);
+  p.club = user.team;
+  p.league = club.league;
+  delete p.loanOwner;
+  log(game, `RECALL: ${user.team} cut the loan short and bring ${p.name} home from ${from} for ${fee}m in compensation.`);
+  romano(game, `\ud83d\udd19 Loan recalled: ${p.name} is back at ${user.team}. ${from} pocket ${fee}m for the trouble.`);
+  save();
+  res.json({ ok: true, fee });
+});
+
 app.post("/api/loanin", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
   const { game, user } = ctx;
@@ -1963,7 +2006,10 @@ app.get("/api/state", (req, res) => {
       academy: (game.clubs[myTeam].academy || []).map(id => game.players[id]).filter(Boolean),
       staff: game.clubs[myTeam].staff || {},
       trainFocus: game.clubs[myTeam].trainFocus !== undefined ? game.clubs[myTeam].trainFocus : null,
-      conf: game.clubs[myTeam].conf !== undefined ? game.clubs[myTeam].conf : 60
+      conf: game.clubs[myTeam].conf !== undefined ? game.clubs[myTeam].conf : 60,
+      loanedOut: Object.values(game.players).filter(p => p.loanOwner === myTeam && p.club !== myTeam).map(p => ({
+        id: p.id, name: p.name, age: p.age, rating: p.rating, role: p.role || p.pos, club: p.club, fee: recallFee(p)
+      }))
     } : null,
     sacked: !!user.sacked,
     staffPrices: { scout: 15, youth: 20, physio: 10, analyst: 10 },

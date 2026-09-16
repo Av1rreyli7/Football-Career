@@ -459,6 +459,7 @@ tr.me td{background:rgba(255,180,36,.06)}
       </div>
       <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rating</th><th class="num">Value</th><th></th></tr></thead>
       <tbody id="squadBody"></tbody></table>
+      <div id="loanOutBox"></div>
       <div class="controls" style="margin-top:6px">
         <span style="color:var(--dim);font-size:13px">Sort squad:</span>
         <select id="sqsort">
@@ -1092,6 +1093,14 @@ function render() {
       <td class="num">${money(p.value)}</td>
       <td style="white-space:nowrap">${acts}</td></tr>`;
     }).join("");
+    const outs = s.myClub.loanedOut || [];
+    if ($("loanOutBox")) $("loanOutBox").innerHTML = !outs.length ? "" : `
+      <div class="controls" style="margin-top:14px"><h3 style="margin-right:auto">Out on loan</h3></div>
+      <table><thead><tr><th>Player</th><th>Pos</th><th>Age</th><th>Rat</th><th>At</th><th></th></tr></thead><tbody>
+      ${outs.map(p => `<tr><td>${p.name}</td><td>${p.role}</td><td class="num">${p.age}</td>
+        <td class="num">${p.rating}</td><td>${p.club}</td>
+        <td><button class="small" onclick="recallLoan(${p.id},'${String(p.name).replace(/'/g,"")}',${p.fee})">Recall ${money(p.fee)}</button></td></tr>`).join("")}
+      </tbody></table>`;
     const staffDefs = [
       { key: "scout", name: "Chief scout", blurb: "Weekly report on the best young talent" },
       { key: "youth", name: "Youth coach", blurb: "Better academy kids every intake" },
@@ -1805,6 +1814,10 @@ window.setTrain = async id => {
 window.loanOut = async id => {
   if (!confirm("Loan him to an AI club in your league for the season? He comes back a better player.")) return;
   try { await api("/api/loanout", { playerId: id }); tick(); } catch (e) { alert(e.message); }
+};
+window.recallLoan = async (id, nm, fee) => {
+  if (!confirm("Recall " + nm + " from his loan for " + fee + "m compensation? He comes straight back into your squad.")) return;
+  try { await api("/api/recall", { playerId: id }); tick(); } catch (e) { alert(e.message); }
 };
 window.loanIn = async (id, name) => {
   if (!confirm("Take " + name + " on a season long loan? Fee is a tenth of his value, option to buy included.")) return;

@@ -12,7 +12,7 @@ const EXTRA_CLUBS = {
   ]},
   "Celta Vigo": { league: "La Liga", squad: [
     ["Ionut Radu","GK",28,75],
-    ["Oscar Mingueza","DF",26,77],["Carl Starfelt","DF",30,75],["Marcos Alonso","DF",35,71],["Javi Rodriguez","DF",23,73],
+    ["Carl Starfelt","DF",30,75],["Marcos Alonso","DF",35,71],["Javi Rodriguez","DF",23,73],
     ["Fran Beltran","MF",27,76],["Ilaix Moriba","MF",23,76],["Hugo Sotelo","MF",21,74],
     ["Iago Aspas","FW",38,74],["Borja Iglesias","FW",32,76],["Bryan Zaragoza","FW",24,77],["Pablo Duran","FW",24,75],["Williot Swedberg","FW",22,76]
   ]},
@@ -26,13 +26,13 @@ const EXTRA_CLUBS = {
     ["Sergio Herrera","GK",32,74],
     ["Alejandro Catena","DF",31,74],["Juan Cruz","DF",25,74],["Valentin Rosier","DF",29,73],
     ["Lucas Torro","MF",31,72],["Jon Moncayola","MF",27,76],["Aimar Oroz","MF",24,77],
-    ["Ante Budimir","FW",34,77],["Ruben Garcia","FW",32,72],["Victor Munoz","FW",22,74],["Sheraldo Becker","FW",30,73]
+    ["Ante Budimir","FW",34,77],["Ruben Garcia","FW",32,72],["Sheraldo Becker","FW",30,73]
   ]},
   "Getafe": { league: "La Liga", squad: [
     ["David Soria","GK",32,76],
     ["Domingos Duarte","DF",30,73],["Djene","DF",34,72],["Kiko Femenia","DF",34,71],["Diego Rico","DF",32,71],
     ["Mauro Arambarri","MF",30,77],["Luis Milla","MF",31,74],["Mario Martin","MF",21,73],
-    ["Borja Mayoral","FW",28,78],["Adrian Liso","FW",20,75],["Coba da Costa","FW",20,73],["Alvaro Rodriguez","FW",21,74]
+    ["Borja Mayoral","FW",28,78],["Adrian Liso","FW",20,75],["Coba da Costa","FW",20,73]
   ]},
   "Mallorca": { league: "La Liga", squad: [
     ["Leo Roman","GK",25,75],
@@ -79,24 +79,30 @@ const EXTRA_CLUBS = {
 
   // ---------------- SERIE A (more) ----------------
   "Fiorentina": { league: "Serie A", squad: [
+    ["Beto","FW",27,77],
     ["David de Gea","GK",35,80],
     ["Pietro Comuzzo","DF",20,78],["Marin Pongracic","DF",28,76],["Robin Gosens","DF",31,77],["Dodo","DF",27,79],
     ["Rolando Mandragora","MF",28,76],["Nicolo Fagioli","MF",24,77],["Simon Sohm","MF",24,76],["Hans Nicolussi Caviglia","MF",25,74],
-    ["Moise Kean","FW",25,82],["Albert Gudmundsson","FW",28,79],["Roberto Piccoli","FW",24,76],["Jacopo Fazzini","MF",22,76],["Edin Dzeko","FW",39,71]
+    ["Albert Gudmundsson","FW",28,79],["Roberto Piccoli","FW",24,76],["Jacopo Fazzini","MF",22,76],["Edin Dzeko","FW",39,71]
   ]},
   "Lazio": { league: "Serie A", squad: [
     ["Ivan Provedel","GK",31,78],
-    ["Alessio Romagnoli","DF",31,78],["Mario Gila","DF",25,78],["Nuno Tavares","DF",26,77],["Adam Marusic","DF",33,74],["Manuel Lazzari","DF",32,73],
+    ["Alessio Romagnoli","DF",31,78],["Nuno Tavares","DF",26,77],["Adam Marusic","DF",33,74],["Manuel Lazzari","DF",32,73],
     ["Nicolo Rovella","MF",24,79],["Matteo Guendouzi","MF",26,78],["Danilo Cataldi","MF",31,74],["Fisayo Dele-Bashiru","MF",24,75],
     ["Mattia Zaccagni","FW",30,79],["Taty Castellanos","FW",27,78],["Boulaye Dia","FW",29,76],["Gustav Isaksen","FW",24,76],["Pedro","FW",38,72]
   ]},
   "Bologna": { league: "Serie A", squad: [
+    ["Emil Holm","DF",26,74],
+    ["Nicolo Cambiaghi","FW",25,74],
+    ["Tommaso Pobega","MF",27,74],
     ["Lukasz Skorupski","GK",34,76],
-    ["Jhon Lucumi","DF",27,78],["Torbjorn Heggem","DF",26,75],["Emil Holm","DF",25,75],["Juan Miranda","DF",26,74],
+    ["Torbjorn Heggem","DF",26,75],["Emil Holm","DF",25,75],["Juan Miranda","DF",26,74],
     ["Lewis Ferguson","MF",26,79],["Remo Freuler","MF",33,76],["Giovanni Fabbian","MF",22,75],
-    ["Riccardo Orsolini","FW",28,80],["Santiago Castro","FW",21,78],["Jonathan Rowe","FW",22,76],["Ciro Immobile","FW",35,74],["Federico Bernardeschi","FW",31,74]
+    ["Riccardo Orsolini","FW",28,80],["Ciro Immobile","FW",35,74],["Federico Bernardeschi","FW",31,74]
   ]},
   "Como": { league: "Serie A", squad: [
+    ["Moise Kean","FW",25,82],
+    ["Trevoh Chalobah","DF",26,80],
     ["Jean Butez","GK",30,74],
     ["Marc-Oliver Kempf","DF",30,74],["Jacobo Ramon","DF",20,75],["Alex Valle","DF",21,75],["Alberto Moreno","DF",33,71],
     ["Nico Paz","MF",21,84],["Maximo Perrone","MF",23,76],["Lucas Da Cunha","MF",24,74],["Sergi Roberto","MF",33,72],
@@ -127,7 +133,7 @@ const EXTRA_CLUBS = {
     ["Sebastiano Esposito","FW",23,76],["Andrea Belotti","FW",32,73],["Gianluca Gaetano","FW",25,74],["Leonardo Pavoletti","FW",37,68]
   ]},
   "Parma": { league: "Serie A", squad: [
-    ["Zion Suzuki","GK",23,79],
+    
     ["Botond Balogh","DF",23,73],["Enrico Delprato","DF",26,73],["Emanuele Valeri","DF",27,73],["Mathias Lovik","DF",24,72],
     ["Adrian Bernabe","MF",24,76],["Mandela Keita","MF",23,74],["Nahuel Estevez","MF",30,72],
     ["Mateo Pellegrino","FW",24,75],["Patrick Cutrone","FW",28,73],["Jacob Ondrejka","FW",23,74],["Pontus Almqvist","FW",26,72]
@@ -154,7 +160,7 @@ const EXTRA_CLUBS = {
   ]},
   "Borussia Monchengladbach": { league: "Bundesliga", squad: [
     ["Moritz Nicolas","GK",28,74],
-    ["Nico Elvedi","DF",29,76],["Marvin Friedrich","DF",30,73],["Joe Scally","DF",23,75],["Lukas Ullrich","DF",21,73],
+    ["Marvin Friedrich","DF",30,73],["Joe Scally","DF",23,75],["Lukas Ullrich","DF",21,73],
     ["Rocco Reitz","MF",23,76],["Philipp Sander","MF",27,73],["Jens Castrop","MF",22,74],
     ["Tim Kleindienst","FW",30,77],["Franck Honorat","FW",29,75],["Haris Tabakovic","FW",31,73],["Shuto Machino","FW",26,75]
   ]},
@@ -168,7 +174,7 @@ const EXTRA_CLUBS = {
     ["Oliver Baumann","GK",35,76],
     ["Albian Hajdari","DF",22,74],["Kevin Akpoguma","DF",30,72],["Vladimir Coufal","DF",33,72],
     ["Grischa Promel","MF",30,73],["Leon Avdullahu","MF",21,75],["Wouter Burger","MF",24,75],
-    ["Andrej Kramaric","FW",34,76],["Fisnik Asllani","FW",23,76],["Tim Lemperle","FW",23,74],["Bazoumana Toure","FW",19,75]
+    ["Andrej Kramaric","FW",34,76],["Fisnik Asllani","FW",23,76],["Tim Lemperle","FW",23,74]
   ]},
   "Mainz": { league: "Bundesliga", squad: [
     ["Robin Zentner","GK",31,75],
@@ -177,6 +183,7 @@ const EXTRA_CLUBS = {
     ["Nelson Weiper","FW",20,75],["Armindo Sieb","FW",22,73],["Jae-sung Lee","MF",33,72]
   ]},
   "Werder Bremen": { league: "Bundesliga", squad: [
+    ["Niclas Fullkrug","FW",32,77],
     ["Mio Backhaus","GK",21,74],
     ["Marco Friedl","DF",27,74],["Niklas Stark","DF",30,72],["Amos Pieper","DF",27,72],["Felix Agu","DF",26,72],
     ["Romano Schmid","MF",25,76],["Jens Stage","MF",29,74],["Senne Lynen","MF",26,73],
@@ -202,7 +209,7 @@ const EXTRA_CLUBS = {
   ]},
   "Hamburg": { league: "Bundesliga", squad: [
     ["Daniel Heuer Fernandes","GK",33,73],
-    ["Luka Vuskovic","DF",18,76],["Jordan Torunarigha","DF",28,73],["Miro Muheim","DF",27,74],
+    ["Jordan Torunarigha","DF",28,73],["Miro Muheim","DF",27,74],
     ["Jonas Meffert","MF",31,72],["Nicolai Remberg","MF",25,72],["Fabio Vieira","MF",25,77],
     ["Rayan Philippe","FW",25,73],["Robert Glatzel","FW",32,72],["Jean-Luc Dompe","FW",30,72]
   ]},
@@ -234,7 +241,7 @@ const EXTRA_CLUBS = {
   ]},
   "Strasbourg": { league: "Ligue 1", squad: [
     ["Mike Penders","GK",20,77],
-    ["Guela Doue","DF",23,76],["Mamadou Sarr","DF",20,76],["Ben Chilwell","DF",29,76],["Ismael Doukoure","DF",22,74],
+    ["Mamadou Sarr","DF",20,76],["Ben Chilwell","DF",29,76],["Ismael Doukoure","DF",22,74],
     ["Valentin Barco","MF",21,76],["Kendry Paez","MF",18,76],["Samir Caetano","DF",26,72],
     ["Emanuel Emegha","FW",23,79],["Dilane Bakwa","FW",23,78],["Joaquin Panichelli","FW",23,77],["Abdoul Ouattara","FW",20,74]
   ]},
@@ -295,6 +302,11 @@ const EXTRA_CLUBS = {
 
   // ---------------- CHAMPIONSHIP (more English clubs) ----------------
   "Ipswich": { league: "Championship", squad: [
+    ["Abdul Fatawu","FW",21,77],
+    ["Daizen Maeda","FW",28,78],
+    ["Sasa Lukic","MF",30,77],
+    ["Julio Enciso","MF",21,76],
+    ["Exequiel Palacios","MF",27,82],
     ["Alex Palmer","GK",29,74],
     ["Dara O'Shea","DF",26,76],["Jacob Greaves","DF",25,75],["Leif Davis","DF",26,75],
     ["Jens Cajuste","MF",26,75],["Sam Morsy","MF",34,71],["Azor Matusiwa","MF",27,74],["Marcelino Nunez","MF",26,75],
@@ -303,7 +315,7 @@ const EXTRA_CLUBS = {
   "Sheffield United": { league: "Championship", squad: [
     ["Michael Cooper","GK",26,75],
     ["Japhet Tanganga","DF",26,74],["Mark McGuinness","DF",24,73],["Sam McCallum","DF",25,72],
-    ["Gustavo Hamer","MF",28,77],["Callum O'Hare","MF",27,74],["Sydie Peck","MF",21,73],
+    ["Callum O'Hare","MF",27,74],["Sydie Peck","MF",21,73],
     ["Tyrese Campbell","FW",26,74],["Louie Barry","FW",22,73],["Andre Brooks","FW",22,72]
   ]},
   "West Brom": { league: "Championship", squad: [
@@ -315,7 +327,7 @@ const EXTRA_CLUBS = {
   "Middlesbrough": { league: "Championship", squad: [
     ["Sol Brynn","GK",25,72],
     ["Darragh Lenihan","DF",31,72],["George Edmundson","DF",28,71],["Neto Borges","DF",29,72],
-    ["Hayden Hackney","MF",23,76],["Dan Barlaser","MF",28,72],["Aidan Morris","MF",24,73],
+    ["Dan Barlaser","MF",28,72],["Aidan Morris","MF",24,73],
     ["Morgan Whittaker","FW",24,75],["Tommy Conway","FW",23,74],["David Strelec","FW",24,75]
   ]},
   "Norwich": { league: "Championship", squad: [
@@ -331,6 +343,8 @@ const EXTRA_CLUBS = {
     ["Vakoun Bayo","FW",28,72],["Kwadwo Baah","FW",22,73],["Rocco Vata","FW",20,72],["Moussa Sissoko","MF",36,68]
   ]},
   "Coventry": { league: "Championship", squad: [
+    ["Gustavo Hamer","MF",28,77],
+    ["Caleb Yirenkyi","MF",20,77],
     ["Carl Rushworth","GK",24,73],
     ["Milan van Ewijk","DF",25,74],["Luis Binks","DF",24,72],["Jay Dasilva","DF",27,71],
     ["Jack Rudoni","MF",24,75],["Victor Torp","MF",25,74],["Josh Eccles","MF",25,72],
@@ -361,6 +375,7 @@ const EXTRA_CLUBS = {
     ["Yuki Ohashi","FW",29,72],["Igor Tyjon","FW",20,71],["Emmanuel Dennis","FW",28,72]
   ]},
   "Hull": { league: "Championship", squad: [
+    ["Mohamed-Ali Cho","FW",21,75],
     ["Ivor Pandur","GK",25,72],
     ["Lewie Coyle","DF",30,70],["Alfie Jones","DF",28,71],["John Egan","DF",33,69],
     ["Regan Slater","MF",26,71],["Kasey Palmer","MF",29,71],["Amir Hadziahmetovic","MF",28,71],
@@ -424,7 +439,7 @@ const EXTRA_CLUBS = {
     ["Simon Mignolet","GK",37,74],["Nordin Jackers","GK",28,72],
     ["Joel Ordonez","DF",21,78],["Brandon Mechele","DF",32,73],["Bjorn Meijer","DF",22,74],["Kyriani Sabbe","DF",20,74],
     ["Hans Vanaken","MF",33,77],["Raphael Onyedika","MF",24,76],["Aleksandar Stankovic","MF",20,75],
-    ["Christos Tzolis","FW",23,78],["Carlos Forbs","FW",21,75],["Romeo Vermant","FW",21,74],["Hugo Vetlesen","MF",25,74]
+    ["Carlos Forbs","FW",21,75],["Romeo Vermant","FW",21,74],["Hugo Vetlesen","MF",25,74]
   ]},
   "Union SG": { league: "Belgian Pro League", squad: [
     ["Kjell Scherpen","GK",25,74],
@@ -447,12 +462,14 @@ const EXTRA_CLUBS = {
 
   // ---------------- TURKEY (more) ----------------
   "Fenerbahce": { league: "Super Lig", squad: [
+    ["Nathan Ake","DF",30,81],
     ["Ederson","GK",32,84],
     ["Milan Skriniar","DF",30,79],["Caglar Soyuncu","DF",29,74],["Archie Brown","DF",23,75],["Nelson Semedo","DF",32,75],
     ["Marco Asensio","MF",30,78],["Sebastian Szymanski","MF",26,77],["Fred","MF",32,76],["Ismail Yuksek","MF",26,74],
     ["Jhon Duran","FW",22,79],["Youssef En-Nesyri","FW",28,77],["Anderson Talisca","FW",31,75],["Dorgeles Nene","FW",22,75]
   ]},
   "Besiktas": { league: "Super Lig", squad: [
+    ["Leandro Trossard","FW",31,81],
     ["Mert Gunok","GK",36,73],
     ["Gabriel Paulista","DF",35,70],["Emirhan Topcu","DF",25,73],["David Jurasek","DF",25,72],["Jonas Svensson","DF",32,70],
     ["Salih Ucan","MF",31,72],["Demir Ege Tiknaz","MF",20,73],["Kartal Yilmaz","MF",22,71],
@@ -473,6 +490,7 @@ const EXTRA_CLUBS = {
     ["Ivan Toney","FW",29,81],["Riyad Mahrez","FW",35,79],["Galeno","FW",28,77],["Firas Al-Buraikan","FW",25,74]
   ]},
   "Al-Qadsiah": { league: "Saudi Pro League", squad: [
+    ["Tijjani Reijnders","MF",27,84],
     ["Koen Casteels","GK",33,76],
     ["Nacho Fernandez","DF",36,73],["Ezequiel Fernandez","MF",23,76],["Ali Lajami","DF",29,70],
     ["Nahitan Nandez","MF",30,74],["Cameron Puertas","MF",27,75],
@@ -527,7 +545,7 @@ Object.assign(EXTRA_CLUBS, {
     ["Nahuel Guzman","GK",39,72],["Javier Aquino","DF",35,70],["Joaquim","DF",26,72],["Jesus Angulo","DF",27,71],["Jesus Garza","DF",24,70],["Marco Farfan","DF",26,70],["Rafael Carioca","MF",36,70],["Fernando Gorriaran","MF",31,73],["Juan Brunetta","MF",28,75],["Diego Lainez","FW",25,72],["Andre-Pierre Gignac","FW",40,73],["Nicolas Ibanez","FW",30,72],["Ozziel Herrera","FW",24,71]
   ]},
   "Olympiacos": { league: "Greece", squad: [
-    ["Konstantinos Tzolakis","GK",23,75],["Panagiotis Retsos","DF",27,72],["Lorenzo Pirola","DF",23,73],["Rodinei","DF",33,70],["Costinha","DF",25,71],["Santiago Hezze","MF",24,74],["Chiquinho","MF",30,72],["Dani Garcia","MF",34,70],["Daniel Podence","FW",30,74],["Ayoub El Kaabi","FW",32,75],["Gelson Martins","FW",30,72],["Mehdi Taremi","FW",33,76]
+    ["Konstantinos Tzolakis","GK",23,75],["Panagiotis Retsos","DF",27,72],["Lorenzo Pirola","DF",23,73],["Rodinei","DF",33,70],["Santiago Hezze","MF",24,74],["Chiquinho","MF",30,72],["Dani Garcia","MF",34,70],["Daniel Podence","FW",30,74],["Ayoub El Kaabi","FW",32,75],["Gelson Martins","FW",30,72],["Mehdi Taremi","FW",33,76]
   ]},
   "RB Salzburg": { league: "Austria", squad: [
     ["Alexander Schlager","GK",29,73],["Jacob Rasmussen","DF",28,71],["Joane Gadou","DF",18,72],["Frans Kratzig","DF",22,71],["Aleksa Terzic","DF",26,70],["Mads Bidstrup","MF",24,73],["Maurits Kjaergaard","MF",22,74],["Soumaila Diabate","MF",20,71],["Petar Ratkov","FW",22,72],["Edmund Baidoo","FW",20,71],["Yorbe Vertessen","FW",24,73],["Karim Konate","FW",21,74]
@@ -580,7 +598,7 @@ const EXTRA_DEPTH = {
   "Real Betis": [["Pau Lopez","GK",31,75],["Aitor Ruibal","DF",29,73],["Sofyan Amrabat","MF",29,76],["Rodrigo Riquelme","FW",25,76]],
   "Sevilla": [["Orjan Nyland","GK",35,72],["Cesar Azpilicueta","DF",36,71],["Tanguy Nianzou","DF",23,74],["Peque Fernandez","MF",25,73],["Akor Adams","FW",25,74]],
   "RB Leipzig": [["Maarten Vandevoordt","GK",23,76],["El Chadaille Bitshiabu","DF",20,75],["Ridle Baku","DF",27,74],["Assan Ouedraogo","MF",19,78],["Conrad Harder","FW",20,76]],
-  "Eintracht Frankfurt": [["Michael Zetterer","GK",30,74],["Aurele Amenda","DF",22,74],["Oscar Hojlund","MF",21,73],["Michy Batshuayi","FW",32,72]],
+  "Eintracht Frankfurt": [["Aurele Amenda","DF",22,74],["Oscar Hojlund","MF",21,73],["Michy Batshuayi","FW",32,72]],
   "Stuttgart": [["Fabian Bredlow","GK",30,72],["Luca Jaquez","DF",22,74],["Nikolas Nartey","MF",25,71],["Bilal El Khannouss","MF",21,79]],
   "Lyon": [["Dominik Greif","GK",28,74],["Ruben Kluivert","DF",24,73],["Abner","DF",25,74],["Orel Mangala","MF",27,75],["Adam Karabec","MF",22,74]],
   "Lille": [["Arnaud Bodart","GK",27,73],["Aissa Mandi","DF",34,71],["Nathan Ngoy","DF",22,74],["Andre Gomes","MF",32,73]],
@@ -588,8 +606,8 @@ const EXTRA_DEPTH = {
   "PSV": [["Nick Olij","GK",30,73],["Armando Obispo","DF",26,73],["Mauro Junior","DF",26,73],["Ismael Saibari","MF",24,79],["Esmir Bajraktarevic","FW",20,73]],
   "Feyenoord": [["Justin Bijlow","GK",28,74],["Jordan Bos","DF",23,75],["Tsuyoshi Watanabe","DF",28,74],["Jakub Moder","MF",26,74],["Oussama Targhalline","MF",23,73],["Leo Sauer","FW",19,74]],
   "Benfica": [["Samuel Soares","GK",23,72],["Tomas Araujo","DF",23,77],["Enzo Barrenechea","MF",24,75],["Andreas Schjelderup","FW",21,76],["Gianluca Prestianni","FW",19,74]],
-  "Porto": [["Claudio Ramos","GK",34,71],["Zaid Romero","DF",25,73],["Dominik Prpic","DF",21,73],["Stephen Eustaquio","MF",29,76],["Rodrigo Mora","FW",18,79],["Deniz Gul","FW",21,73]],
-  "Sporting CP": [["Eduardo Quaresma","DF",23,75],["Matheus Reis","DF",30,74],["Hidemasa Morita","MF",30,76],["Geovany Quenda","FW",18,79]],
+  "Porto": [["Claudio Ramos","GK",34,71],["Zaid Romero","DF",25,73],["Dominik Prpic","DF",21,73],["Stephen Eustaquio","MF",29,76],["Deniz Gul","FW",21,73]],
+  "Sporting CP": [["Eduardo Quaresma","DF",23,75],["Matheus Reis","DF",30,74],["Hidemasa Morita","MF",30,76]],
   "Galatasaray": [["Gunay Guvenc","GK",34,70],["Kazimcan Karatas","DF",23,72],["Roland Sallai","FW",28,76],["Mario Lemina","MF",32,75],["Yunus Akgun","FW",25,75]],
   "Al-Hilal": [["Ali Al-Bulaihi","DF",36,70],["Hassan Al-Tambakti","DF",26,73],["Mohamed Kanno","MF",31,72],["Nasser Al-Dawsari","MF",27,72],["Abdullah Al-Hamdan","FW",26,71]],
   "Al-Nassr": [["Nawaf Al-Aqidi","GK",25,71],["Mohammed Simakan","DF",25,78],["Sultan Al-Ghannam","DF",31,71],["Ayman Yahya","DF",23,71],["Abdullah Al-Khaibari","MF",29,71],["Mohammed Maran","FW",24,70]],
@@ -638,10 +656,10 @@ const EXTRA_DEPTH = {
   "Hamburg": [["Matheo Raab","GK",27,70],["Warmed Omari","DF",25,72],["Giorgi Gocholeishvili","DF",24,71],["Albert Sambi Lokonga","MF",26,73],["Yussuf Poulsen","FW",31,73]],
   "St Pauli": [["Ben Voll","GK",24,69],["Arkadiusz Pyrka","DF",22,71],["Eric Smith","MF",28,73],["Abdoulie Ceesay","FW",21,72]],
   // new Ligue 1
-  "Nice": [["Teddy Boulhendi","GK",24,69],["Ali Abdi","DF",31,72],["Tom Louchet","MF",21,72],["Mohamed-Ali Cho","FW",21,75]],
+  "Nice": [["Teddy Boulhendi","GK",24,69],["Ali Abdi","DF",31,72],["Tom Louchet","MF",21,72]],
   "Lens": [["Regis Gurtner","GK",38,68],["Samson Baidoo","DF",21,73],["Hamzat Ojediran","MF",23,72],["Morgan Guilavogui","FW",27,72]],
-  "Rennes": [["Gauthier Gallon","GK",32,68],["Jeremy Jacquet","DF",20,75],["Mahamadou Nagida","DF",21,72],["Glen Kamara","MF",30,73]],
-  "Strasbourg": [["Karl Johan Johnsson","GK",35,68],["Lucas Hogsberg","DF",19,73],["Julio Enciso","MF",21,76],["Martial Godo","FW",22,74]],
+  "Rennes": [["Gauthier Gallon","GK",32,68],["Mahamadou Nagida","DF",21,72],["Glen Kamara","MF",30,73]],
+  "Strasbourg": [["Karl Johan Johnsson","GK",35,68],["Lucas Hogsberg","DF",19,73],["Martial Godo","FW",22,74]],
   "Toulouse": [["Kjetil Haug","GK",27,70],["Warren Kamanzi","DF",24,72],["Alexis Vossah","MF",24,71],["Shavy Babicka","FW",25,72]],
   "Nantes": [["Patrik Carlgren","GK",33,68],["Tylel Tati","DF",17,72],["Junior Mwanga","DF",22,72],["Dehmaine Tabibou","MF",20,71],["Yassine Benhattab","FW",21,70]],
   "Brest": [["Gregoire Coudert","GK",26,69],["Joris Chotard","MF",24,74],["Jordan Amavi","DF",31,70]],

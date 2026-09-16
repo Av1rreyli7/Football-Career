@@ -69,6 +69,8 @@ const WORLD_CLUBS = {
   ]},
   // ---- Super Lig to 10 ----
   "Trabzonspor": { league: "Super Lig", squad: [
+    ["Andre Onana","GK",30,80],
+    ["Mohamed Salah","FW",33,89],
     ["Onuralp Cevikkan","GK",25,69],["Stefan Savic","DF",34,71],["Arseniy Batagov","DF",23,71],["Mustafa Eskihellac","DF",28,68],["Wagner Pina","DF",23,69],["Okay Yokuslu","MF",31,71],["Tim Jabol-Folcarelli","MF",25,70],["Ozan Tufan","MF",30,70],["Edin Visca","FW",35,69],["Anthony Nwakaeme","FW",36,67],["Simon Banza","FW",29,72],["Paul Onuachu","FW",31,72],["Kazeem Olaigbe","FW",22,69],["Batista Mendy","MF",25,70]
   ]},
   "Basaksehir": { league: "Super Lig", squad: [
