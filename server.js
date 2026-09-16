@@ -921,6 +921,28 @@ function aiToAiTransfers(game) {
   }
 }
 
+function aiFreeAgentSignings(game) {
+  const free = shuffle(Object.values(game.players).filter(p => p.club === "" && p.rating >= 64));
+  if (!free.length) return;
+  let done = 0;
+  for (const p of free) {
+    if (done >= 2) break;
+    if (Math.random() > 0.3) continue;
+    const fits = shuffle(Object.values(game.clubs).filter(c =>
+      !humanOf(game, c.name) && (game.leagueFixtures || {})[c.league] &&
+      c.squad.length < 26 && aiWeakestSpot(game, c).pos === p.pos));
+    if (!fits.length) continue;
+    const club = fits[0];
+    p.club = club.name;
+    p.league = club.league;
+    p.loanOwner = null;
+    club.squad.push(p.id);
+    done++;
+    log(game, `FREE TRANSFER: ${p.name} finds a new home at ${club.name} on a free.`);
+    if (p.rating >= 80) romano(game, `\u270d\ufe0f Free agent no more: ${p.name} signs for ${club.name}. Smart business, zero fee.`);
+  }
+}
+
 function aiLoans(game) {
   if (!windowOpen(game)) return;
   const frenzy = deadlineDay(game);
@@ -1254,6 +1276,9 @@ function endOfSeason(game) {
     }
   }
   spawnWonderkids(game);
+  for (const p of Object.values(game.players)) {
+    if (p.club === "" && p.age >= 37) { delete game.players[p.id]; retired++; }
+  }
   if (retired) log(game, `${retired} players retired this summer and ${regens} regens stepped up.`);
 
   // promotion and relegation: three down, three up, in every country with a second tier
@@ -1557,12 +1582,7 @@ function cupEvents(game, match) {
   game.lastEvents[match.home + "|" + match.away] = { ev, potm: star ? { n: star, c: starClub } : null };
 }
 
-app.post("/api/sim", (req, res) => {
-  const ctx = getCtx(req, res); if (!ctx) return;
-  const { game, user } = ctx;
-  if (user.name !== game.host) return res.status(403).json({ error: "Only the host can sim the matchweek." });
-  if (!game.started) return res.status(400).json({ error: "Start the season first." });
-  if (game.round >= (game.totalRounds || 38)) return res.status(400).json({ error: "The season is over. Check the final tables and awards, then press Start next season." });
+function playMatchweek(game) {
   const wasOpen = windowOpen(game);
   const humanLeagues = new Set(Object.values(game.users).filter(u => u.team && game.clubs[u.team]).map(u => game.clubs[u.team].league));
   game.lastEvents = {};
@@ -1653,6 +1673,7 @@ app.post("/api/sim", (req, res) => {
   aiInboundBids(game);
   aiToAiTransfers(game);
   aiLoans(game);
+  aiFreeAgentSignings(game);
   if (game.round >= (game.totalRounds || 38)) log(game, `SEASON ${game.season}: that was the final matchweek. Awards are in the Tables tab. The host can start the next season when everyone is ready.`);
   const isOpen = windowOpen(game);
   if (game.windowWasOpen === true && !isOpen) romano(game, `⏳ The transfer window has SLAMMED SHUT. No more deals until it reopens. Time to judge every club's business.`);
@@ -1665,8 +1686,37 @@ app.post("/api/sim", (req, res) => {
   if (wasOpen && !isOpen) log(game, "The transfer window has SLAMMED SHUT. No deals until it reopens.");
   if (!wasOpen && isOpen) log(game, "The transfer window is OPEN. Get your deals done.");
   game.lock = { active: true, week: playedWeek };
+}
+
+app.post("/api/sim", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (user.name !== game.host) return res.status(403).json({ error: "Only the host can sim the matchweek." });
+  if (!game.started) return res.status(400).json({ error: "Start the season first." });
+  if (game.round >= (game.totalRounds || 38)) return res.status(400).json({ error: "The season is over. Check the final tables and awards, then press Start next season." });
+  playMatchweek(game);
   save();
   res.json({ ok: true });
+});
+
+app.post("/api/simto", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (user.name !== game.host) return res.status(403).json({ error: "Only the host can sim the matchweek." });
+  if (!game.started) return res.status(400).json({ error: "Start the season first." });
+  const total = game.totalRounds || 38;
+  if (game.round >= total) return res.status(400).json({ error: "The season is over. Check the final tables and awards, then press Start next season." });
+  const target = Math.floor(Number(req.body.week));
+  if (!Number.isFinite(target) || target < 1 || target > total) return res.status(400).json({ error: "Pick a week between 1 and " + total + "." });
+  if (target <= game.round) return res.status(400).json({ error: "That week has already been played. You are on week " + (game.round + 1) + "." });
+  let guard = 0;
+  while (game.round < target && game.round < total && guard < 60) {
+    playMatchweek(game);
+    guard++;
+  }
+  log(game, "FAST FORWARD: the host simmed ahead to week " + game.round + ".");
+  save();
+  res.json({ ok: true, round: game.round });
 });
 
 app.post("/api/nextseason", (req, res) => {
@@ -1698,6 +1748,7 @@ app.post("/api/offer", (req, res) => {
   const p = game.players[req.body.playerId];
   const fee = Math.round(Number(req.body.fee) * 10) / 10;
   if (!p) return res.status(400).json({ error: "Player not found." });
+  if (p.club === "") return res.status(400).json({ error: "He is a free agent. Sign him for nothing from the free agents list in the Market tab." });
   if (p.academy) return res.status(400).json({ error: "Academy players can't be bought. Their club has to promote them first." });
   if (p.loanOwner) return res.status(400).json({ error: "He is on loan. His parent club won't sell him mid loan." });
   if (p.club === user.team) return res.status(400).json({ error: "He already plays for you." });
@@ -1838,6 +1889,56 @@ const STAFF = {
   physio: { cost: 10, name: "Head physio" },
   analyst: { cost: 10, name: "Match analyst" }
 };
+
+app.post("/api/release", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  const p = game.players[req.body.playerId];
+  if (!p) return res.status(400).json({ error: "Player not found." });
+  if (p.loanOwner === user.team && p.club !== user.team) return res.status(400).json({ error: "He is out on loan. Recall him first, then you can terminate his contract." });
+  if (p.club !== user.team) return res.status(400).json({ error: "He is not your player." });
+  if (p.loanOwner && p.loanOwner !== user.team) return res.status(400).json({ error: "He is only here on loan. You cannot terminate another club's contract." });
+  if (p.academy) return res.status(400).json({ error: "Academy kids cannot have their contracts terminated. Promote or keep them." });
+  const club = game.clubs[user.team];
+  if (club.squad.length <= 14) return res.status(400).json({ error: "Your squad is too thin to release anyone. Fourteen players is the floor." });
+  const gks = club.squad.map(id => game.players[id]).filter(x => x && x.pos === "GK" && !x.academy).length;
+  if (p.pos === "GK" && gks <= 1) return res.status(400).json({ error: "He is your only keeper. Sign another before releasing him." });
+  const cost = 0.5;
+  if (club.budget < cost) return res.status(400).json({ error: "Terminating a contract costs 0.5m in compensation and you cannot cover it." });
+  club.budget = Math.round((club.budget - cost) * 10) / 10;
+  club.squad = club.squad.filter(id => id !== p.id);
+  stripFromLineup(club, p.id);
+  if (club.trainFocus === p.id) club.trainFocus = null;
+  p.club = "";
+  p.league = "";
+  p.loanOwner = null;
+  p.listed = false;
+  voidOtherOffers(game, p.id, -1);
+  log(game, `RELEASED: ${user.team} terminate ${p.name}'s contract for 0.5m compensation. He is a free agent now.`);
+  if (p.rating >= 80) romano(game, `\ud83d\udca3 Contract TERMINATED: ${p.name} leaves ${user.team} by mutual agreement. Free agent. Expect a scramble.`);
+  save();
+  res.json({ ok: true });
+});
+
+app.post("/api/signfree", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  const p = game.players[req.body.playerId];
+  if (!p) return res.status(400).json({ error: "Player not found." });
+  if (p.club !== "") return res.status(400).json({ error: "He is not a free agent." });
+  const club = game.clubs[user.team];
+  if (club.squad.length >= 30) return res.status(400).json({ error: "Squad is full (30 max). Sell someone first." });
+  p.club = user.team;
+  p.league = club.league;
+  p.loanOwner = null;
+  club.squad.push(p.id);
+  log(game, `FREE TRANSFER: ${p.name} signs for ${user.team} on a free. No fee, no drama.`);
+  if (p.rating >= 80) romano(game, `\u270d\ufe0f Here we go, on a FREE: ${p.name} joins ${user.team}. The best kind of business.`);
+  save();
+  res.json({ ok: true });
+});
 
 app.post("/api/loanout", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
@@ -2186,19 +2287,21 @@ app.get("/api/market", (req, res) => {
   const q = String(req.query.q || "").toLowerCase();
   const league = req.query.league || "";
   const pos = req.query.pos || "";
-  let list = Object.values(game.players).filter(p => p.club !== user.team && !p.academy);
+  let list = Object.values(game.players).filter(p => p.club !== user.team && p.club !== "" && !p.academy);
   if (req.query.wonder === "1") list = list.filter(p => p.age <= 21 && p.rating >= 82);
   if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.club.toLowerCase().includes(q));
   if (league) list = list.filter(p => p.league === league);
   if (pos) list = list.filter(p => p.pos === pos);
   list.sort((a, b) => b.rating - a.rating);
+  const free = Object.values(game.players).filter(p => p.club === "").sort((a, b) => b.rating - a.rating);
   res.json({
     players: list.slice(0, 60).map(p => ({
       ...p,
       asking: askingPrice(game, p, p.club),
       humanOwned: !!humanOf(game, p.club)
     })),
-    leagues: [...new Set(Object.values(game.players).map(p => p.league))].sort()
+    freeAgents: free.slice(0, 30).map(p => ({ id: p.id, name: p.name, age: p.age, rating: p.rating, role: p.role, pos: p.pos })),
+    leagues: [...new Set(Object.values(game.players).map(p => p.league))].filter(l => l).sort()
   });
 });
 

@@ -224,7 +224,7 @@ const CLUBS = {
     ["Joan Garcia","GK",24,84],["Wojciech Szczesny","GK",35,79],
     ["Pau Cubarsi","DF",19,85],["Jules Kounde","DF",27,85],["Alejandro Balde","DF",22,83],["Eric Garcia","DF",25,79],
     ["Pedri","MF",23,90],["Frenkie de Jong","MF",28,85],["Gavi","MF",21,83],["Fermin Lopez","MF",22,82],["Marc Casado","MF",22,80],["Dani Olmo","MF",27,84],
-    ["Lamine Yamal","FW",18,90],["Raphinha","FW",29,88],["Robert Lewandowski","FW",37,84],["Ferran Torres","FW",25,82],["Marcus Rashford","FW",28,81],["Roony Bardghji","FW",20,77]
+    ["Lamine Yamal","FW",18,90],["Raphinha","FW",29,88],["Robert Lewandowski","FW",37,84],["Marcus Rashford","FW",28,81],["Roony Bardghji","FW",20,77]
   ]},
   "Atletico Madrid": { league: "La Liga", squad: [
     ["Cristian Romero","DF",27,85],
@@ -363,6 +363,7 @@ const CLUBS = {
 
   // ---------------- LIGUE 1 ----------------
   "PSG": { league: "Ligue 1", squad: [
+    ["Ferran Torres","FW",26,83],
     ["Lucas Digne","DF",32,78],
     ["Lucas Chevalier","GK",24,83],
     ["Marquinhos","DF",31,84],["Willian Pacho","DF",24,85],["Achraf Hakimi","DF",27,88],["Nuno Mendes","DF",23,86],["Lucas Beraldo","DF",22,79],["Illia Zabarnyi","DF",23,81],

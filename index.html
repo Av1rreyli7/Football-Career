@@ -523,6 +523,7 @@ tr.me td{background:rgba(255,180,36,.06)}
       </div>
       <table><thead><tr><th>Player</th><th>Club</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th class="num">Value</th><th class="num">Asking</th><th></th></tr></thead>
       <tbody id="marketBody"></tbody></table>
+      <div id="freeBox"></div>
       <div class="msg" id="marketMsg"></div>
     </section>
 
@@ -538,6 +539,8 @@ tr.me td{background:rgba(255,180,36,.06)}
       <div class="controls">
         <h3 style="margin-right:auto">Matches</h3>
         <button id="simBtn" class="gold hidden">Sim next matchweek (host)</button>
+        <button id="ffBtn18" class="ghost hidden">Fast forward to week 18</button>
+        <button id="ffBtn37" class="ghost hidden">Fast forward to week 37</button>
         <button id="nextSeasonBtn" class="gold hidden">Start next season (host)</button>
       </div>
       <div class="grid2">
@@ -1086,7 +1089,8 @@ function render() {
         ? `<button class="small" onclick="buyLoan(${p.id})" title="Make it permanent at his value">Buy ${money(p.value)}</button>`
         : `<button class="small ghost" onclick="toggleList(${p.id})">${p.listed?'Unlist':'List'}</button>
            <button class="small ghost" onclick="setTrain(${s.myClub.trainFocus === p.id ? "null" : p.id})">${s.myClub.trainFocus === p.id ? "Stop" : "Train"}</button>
-           ${p.age <= 23 ? `<button class="small ghost" onclick="loanOut(${p.id})">Loan out</button>` : ""}`;
+           ${p.age <= 23 ? `<button class="small ghost" onclick="loanOut(${p.id})">Loan out</button>` : ""}
+           <button class="small ghost" onclick="releasePlayer(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Release</button>`;
       return `
       <tr><td>${p.name} ${tags}</td>
       <td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
@@ -1147,6 +1151,8 @@ function render() {
   // matches
   const seasonDone = !!s.seasonOver;
   $("simBtn").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone));
+  $("ffBtn18").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone && s.round < 18));
+  $("ffBtn37").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone && s.round < 37));
   $("nextSeasonBtn").classList.toggle("hidden", !(s.you === s.host && s.started && seasonDone));
   if ($("seasonOverTag")) $("seasonOverTag").classList.toggle("hidden", !seasonDone);
   $("thisWeek").innerHTML = s.thisWeek.map(m => fixtureRow(m, s)).join("") || "<p style='color:var(--dim)'>Season done. New one starts on next sim.</p>";
@@ -1850,6 +1856,14 @@ if ($("cupFilter")) $("cupFilter").onchange = () => { if (STATE) render(); };
 window.pick = async t => { try { await api("/api/pick",{team:t}); tick(); } catch(e){ $("pickMsg").textContent = e.message; } };
 $("startBtn").onclick = async () => { try { await api("/api/start",{}); tick(); } catch(e){ $("pickMsg").textContent = e.message; } };
 $("simBtn").onclick = async () => { $("simBtn").disabled = true; try { await api("/api/sim",{}); await tick(); } catch(e){ alert(e.message); } $("simBtn").disabled = false; };
+window.simTo = async n => {
+  if (!confirm("Fast forward to week " + n + "? Every week in between gets simmed, matches, transfers, injuries, the lot.")) return;
+  $("ffBtn18").disabled = true; $("ffBtn37").disabled = true;
+  try { await api("/api/simto", { week: n }); await tick(); } catch(e){ alert(e.message); }
+  $("ffBtn18").disabled = false; $("ffBtn37").disabled = false;
+};
+$("ffBtn18").onclick = () => simTo(18);
+$("ffBtn37").onclick = () => simTo(37);
 $("nextSeasonBtn").onclick = async () => {
   $("nextSeasonBtn").disabled = true;
   try { await api("/api/nextseason",{}); await tick(); } catch(e){ alert(e.message); }
@@ -1909,9 +1923,24 @@ async function loadMarket() {
       <td class="num">${money(p.value)}</td><td class="num">${money(p.asking)}</td>
       <td style="white-space:nowrap">${acts}</td></tr>`;
     }).join("");
+    const fa = j.freeAgents || [];
+    $("freeBox").innerHTML = !fa.length ? "" : `
+      <div class="controls" style="margin-top:14px"><h3 style="margin-right:auto">Free agents</h3><span class="tag">No fee, sign any week</span></div>
+      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rat</th><th></th></tr></thead><tbody>
+      ${fa.map(p => `<tr><td>${p.name}</td><td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
+      <td><button class="small" onclick="signFree(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Sign free</button></td></tr>`).join("")}
+      </tbody></table>`;
     if (!open) $("marketMsg").textContent = STATE.window.label + ". You can browse but not bid.";
   } catch(e){ $("marketMsg").textContent = e.message; }
 }
+window.signFree = async (id, name) => {
+  if (!confirm("Sign " + name + " on a free? No fee, he joins straight away.")) return;
+  try { await api("/api/signfree", { playerId: id }); await tick(); loadMarket(); } catch(e){ alert(e.message); }
+};
+window.releasePlayer = async (id, name) => {
+  if (!confirm("Terminate " + name + "'s contract? It costs 0.5m in compensation and he walks away a free agent for anyone to sign.")) return;
+  try { await api("/api/release", { playerId: id }); await tick(); } catch(e){ alert(e.message); }
+};
 $("mgo").onclick = loadMarket;
 $("msort").onchange = loadMarket;
 $("mwonder").onchange = loadMarket;
