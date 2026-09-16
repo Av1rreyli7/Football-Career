@@ -381,6 +381,9 @@ const REAL_LOANS = {
 };
 const REAL_ROLES = {
   "JJ Gabriel": "ST",
+  "Gabriel Jesus": "ST", "Carlos Espi": "ST", "Ismael Saibari": "CAM", "Nathaniel Brown": "LB",
+  "Denzel Dumfries": "RB", "Marc Guehi": "CB", "Tosin Adarabioyo": "CB", "Joel Veltman": "RB",
+  "Conor Gallagher": "CM", "Ademola Lookman": "LW", "Oscar Bobb": "RW", "Ainsley Maitland-Niles": "CM",
   "Erling Haaland": "ST", "Kylian Mbappe": "ST", "Harry Kane": "ST", "Ousmane Dembele": "ST", "Alexander Isak": "ST",
   "Viktor Gyokeres": "ST", "Victor Osimhen": "ST", "Julian Alvarez": "ST", "Lautaro Martinez": "ST", "Robert Lewandowski": "ST",
   "Dusan Vlahovic": "ST", "Hugo Ekitike": "ST", "Benjamin Sesko": "ST", "Ollie Watkins": "ST", "Jean-Philippe Mateta": "ST",
