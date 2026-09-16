@@ -365,6 +365,48 @@ const ROLE_POOL = {
 };
 // real players get the position they actually play in real life
 const ROLE_GROUP = { GK: "GK", RB: "DF", CB: "DF", LB: "DF", CDM: "MF", CM: "MF", CAM: "MF", RW: "FW", ST: "FW", LW: "FW" };
+const RIVALRIES = [
+  ["Man United", "Man City"], ["Man United", "Liverpool"], ["Liverpool", "Everton"],
+  ["Arsenal", "Tottenham"], ["Chelsea", "Tottenham"], ["Chelsea", "Arsenal"],
+  ["Newcastle", "Sunderland"], ["Aston Villa", "Birmingham"], ["West Ham", "Tottenham"],
+  ["Leeds United", "Man United"],
+  ["Real Madrid", "Barcelona"], ["Real Madrid", "Atletico Madrid"], ["Barcelona", "Espanyol"],
+  ["Sevilla", "Real Betis"],
+  ["Inter Milan", "AC Milan"], ["Roma", "Lazio"], ["Juventus", "Inter Milan"], ["Juventus", "Torino"],
+  ["Bayern Munich", "Borussia Dortmund"], ["Borussia Dortmund", "Schalke"], ["Hamburg", "Werder Bremen"],
+  ["PSG", "Marseille"], ["Lyon", "Saint-Etienne"],
+  ["Benfica", "Porto"], ["Benfica", "Sporting CP"], ["Porto", "Sporting CP"],
+  ["Celtic", "Rangers"], ["Ajax", "Feyenoord"], ["Ajax", "PSV"],
+  ["Boca Juniors", "River Plate"],
+  ["Galatasaray", "Fenerbahce"], ["Galatasaray", "Besiktas"], ["Fenerbahce", "Besiktas"],
+  ["Al-Hilal", "Al-Nassr"]
+];
+const RIVAL_SET = new Set(RIVALRIES.map(([a, b]) => a + "|" + b).concat(RIVALRIES.map(([a, b]) => b + "|" + a)));
+function isDerby(home, away) { return RIVAL_SET.has(home + "|" + away); }
+
+const ROLE_LABELS = {
+  GK: "Goalkeeper", RB: "Right Back", CB: "Centre Back", LB: "Left Back",
+  CDM: "Defensive Midfielder", CM: "Central Midfielder", CAM: "Attacking Midfielder",
+  RW: "Right Winger", ST: "Striker", LW: "Left Winger",
+  DF: "Defender", MF: "Midfielder", FW: "Forward"
+};
+function pushUnveil(game, p, club, dealType, fee) {
+  if (!game.unveil) game.unveil = { active: false, queue: [], seq: 0 };
+  game.unveil.seq = (game.unveil.seq || 0) + 1;
+  game.unveil.queue.push({
+    id: game.unveil.seq,
+    name: p.name,
+    role: ROLE_LABELS[p.role] || ROLE_LABELS[p.pos] || p.pos,
+    age: p.age,
+    rating: p.rating,
+    club,
+    dealType,
+    fee: fee || ""
+  });
+  game.unveil.queue = game.unveil.queue.slice(-8);
+  game.unveil.active = true;
+}
+
 const REAL_LOANS = {
   "Andre Onana": "Man United",
   "Omar Marmoush": "Man City",
@@ -521,6 +563,11 @@ function strengths(game, teamName) {
 
 function simMatch(game, m) {
   const A = strengths(game, m.home), B = strengths(game, m.away);
+  if (isDerby(m.home, m.away)) {
+    const mAtt = (A.att + B.att) / 2, mDef = (A.def + B.def) / 2;
+    A.att = A.att * 0.75 + mAtt * 0.25; B.att = B.att * 0.75 + mAtt * 0.25;
+    A.def = A.def * 0.75 + mDef * 0.25; B.def = B.def * 0.75 + mDef * 0.25;
+  }
   const tA = (game.clubs[m.home] || {}).tactic || "balanced";
   const tB = (game.clubs[m.away] || {}).tactic || "balanced";
   let lh = 1.42 * Math.exp((A.att - B.def) / 10);
@@ -531,6 +578,7 @@ function simMatch(game, m) {
   if (tB === "defensive") { la *= 0.85; lh *= 0.78; }
   if (((game.clubs[m.home] || {}).staff || {}).analyst) lh *= 1.05;
   if (((game.clubs[m.away] || {}).staff || {}).analyst) la *= 1.05;
+  if (isDerby(m.home, m.away)) { lh *= 1.06; la *= 1.06; }
   m.hg = poisson(Math.min(lh, 4.2));
   m.ag = poisson(Math.min(la, 4.2));
 }
@@ -750,6 +798,8 @@ function doTransfer(game, offer) {
   voidOtherOffers(game, p.id, offer.id);
   log(game, `TRANSFER: ${p.name} joins ${offer.toClub} from ${from} for £${offer.fee}m${sw ? ` plus ${sw.name} going the other way` : ""}.`);
   romano(game, `🚨✅ HERE WE GO! ${p.name} to ${offer.toClub}, done deal! ${fmtFee(offer.fee)}${sw ? " plus " + sw.name + " in a swap" : " package"} agreed with ${from}. Medical booked, contract signed.`);
+  if (humanOf(game, offer.toClub)) pushUnveil(game, p, offer.toClub, "SIGNED", fmtFee(offer.fee));
+  if (sw && humanOf(game, offer.sellerClub)) pushUnveil(game, sw, offer.sellerClub, "SIGNED", "swap deal");
   return { ok: true };
 }
 
@@ -1116,6 +1166,7 @@ function spawnWonderkids(game) {
 }
 
 function endOfSeason(game) {
+  game.unveil = { active: false, queue: [], seq: (game.unveil && game.unveil.seq) || 0 };
   settleStaleShootouts(game);
   const champions = {};
   game.lastTables = {};
@@ -1385,6 +1436,7 @@ function migrate(game) {
   if (!game.shootouts) game.shootouts = {};
   ensureRoles(game);
   for (const u of Object.values(game.users || {})) if (u.sacked === undefined) u.sacked = false;
+  if (!game.unveil) game.unveil = { active: false, queue: [], seq: 0 };
   for (const c of Object.values(game.clubs || {})) if (c.baseBudget === undefined) c.baseBudget = c.budget;
   if (!game.cups) game.cups = {};
   for (const u of Object.values(game.users || {})) if (u.nation === undefined) u.nation = null;
@@ -1592,9 +1644,22 @@ function playMatchweek(game) {
   for (const [league, fixtures] of Object.entries(game.leagueFixtures)) {
     const round = fixtures[game.round];
     if (!round) continue;
+    if (humanLeagues.has(league)) {
+      for (const m of round) {
+        if (isDerby(m.home, m.away) && (humanOf(game, m.home) || humanOf(game, m.away))) {
+          romano(game, `\ud83d\udd25 DERBY WEEK: ${m.home} against ${m.away}. Form goes out the window, careers are made in games like this.`);
+        }
+      }
+    }
     for (const m of round) { simMatch(game, m); recordScorers(game, m, league, humanLeagues.has(league)); }
     if (humanLeagues.has(league)) {
       log(game, `${league.toUpperCase()} WEEK ${game.round + 1}: ` + round.map(m => `${m.home} ${m.hg}-${m.ag} ${m.away}`).join(" | "));
+      for (const m of round) {
+        if (isDerby(m.home, m.away)) {
+          const line = m.hg === m.ag ? "honours even, nobody gets the bragging rights" : `${m.hg > m.ag ? m.home : m.away} take the bragging rights`;
+          log(game, `DERBY: ${m.home} ${m.hg}-${m.ag} ${m.away}, ${line}.`);
+        }
+      }
     }
   }
   game.round++;
@@ -1656,7 +1721,8 @@ function playMatchweek(game) {
     if (m && m.hg !== null) {
       const myG = m.home === u.team ? m.hg : m.ag;
       const opG = m.home === u.team ? m.ag : m.hg;
-      club.conf += myG > opG ? 3 : myG === opG ? 1 : -3;
+      const derbySwing = isDerby(m.home, m.away) ? 2 : 1;
+      club.conf += (myG > opG ? 3 : myG === opG ? 1 : -3) * derbySwing;
     }
     const table = tableFor(game, club.league);
     const pos = table.findIndex(r => r.team === u.team) + 1;
@@ -1730,6 +1796,15 @@ app.post("/api/nextseason", (req, res) => {
   if (game.round < (game.totalRounds || 38)) return res.status(400).json({ error: "The season isn't finished yet." });
   endOfSeason(game);
   game.lock = { active: false, week: 0 };
+  save();
+  res.json({ ok: true });
+});
+
+app.post("/api/unveilclear", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (user.name !== game.host) return res.status(403).json({ error: "Only the host can end the unveiling." });
+  game.unveil = { active: false, queue: [], seq: (game.unveil && game.unveil.seq) || 0 };
   save();
   res.json({ ok: true });
 });
@@ -1938,6 +2013,7 @@ app.post("/api/signfree", (req, res) => {
   p.loanOwner = null;
   club.squad.push(p.id);
   log(game, `FREE TRANSFER: ${p.name} signs for ${user.team} on a free. No fee, no drama.`);
+  pushUnveil(game, p, user.team, "FREE TRANSFER", "");
   if (p.rating >= 80) romano(game, `\u270d\ufe0f Here we go, on a FREE: ${p.name} joins ${user.team}. The best kind of business.`);
   save();
   res.json({ ok: true });
@@ -2039,6 +2115,7 @@ app.post("/api/loanin", (req, res) => {
   p.listed = false;
   voidOtherOffers(game, p.id, -1);
   log(game, `LOAN: ${p.name} joins ${user.team} on loan from ${owner.name} for a £${fee}m fee, with an option to buy at value.`);
+  pushUnveil(game, p, user.team, "ON LOAN", "");
   romano(game, `\ud83d\udfe1 Here we go, loan version: ${p.name} to ${user.team} on a season long deal! ${fmtFee(fee)} loan fee to ${owner.name}, option to buy included.`);
   save();
   res.json({ ok: true, fee });
@@ -2061,6 +2138,7 @@ app.post("/api/buyloan", (req, res) => {
   delete p.loanOwner;
   delete p.loanFee;
   log(game, `PERMANENT: ${user.team} trigger the option to buy on ${p.name}, £${price}m to ${from}.`);
+  pushUnveil(game, p, user.team, "SIGNED", fmtFee(price));
   romano(game, `🚨✅ HERE WE GO! ${user.team} make the ${p.name} loan PERMANENT. Option to buy triggered, ${fmtFee(price)} to ${from}. Loved it there, staying for good.`);
   save();
   res.json({ ok: true });
@@ -2271,8 +2349,9 @@ app.get("/api/state", (req, res) => {
       for (const league of Object.keys(game.leagueFixtures || {})) out[league] = statBoards(game, league);
       return out;
     })(),
-    thisWeek: myFix[game.round] || [],
-    lastWeek: game.round > 0 ? (myFix[game.round - 1] || []) : [],
+    unveil: game.unveil || { active: false, queue: [] },
+    thisWeek: (myFix[game.round] || []).map(m => ({ ...m, derby: isDerby(m.home, m.away) })),
+    lastWeek: game.round > 0 ? (myFix[game.round - 1] || []).map(m => ({ ...m, derby: isDerby(m.home, m.away) })) : [],
     myFixtures: myTeam ? myFix.map((r, i) => {
       const m = r.find(x => x.home === myTeam || x.away === myTeam);
       return { week: i + 1, ...m };
