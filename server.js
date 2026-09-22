@@ -386,28 +386,47 @@ function isDerby(home, away) { return RIVAL_SET.has(home + "|" + away); }
 
 const PRODIGIES = new Set(["JJ Gabriel"]);
 
+const ROLE_RANK = { "Prospect": 0, "Rotation": 1, "First team": 2, "Star": 3 };
+const SQUAD_ROLES = ["Prospect", "Rotation", "First team", "Star"];
+function defaultWage(p) { return Math.max(0.1, Math.round(p.value * 0.04 * 10) / 10); }
+function defaultRole(p) {
+  if (p.rating >= 86) return "Star";
+  if (p.rating >= 78) return "First team";
+  return p.age <= 20 ? "Prospect" : "Rotation";
+}
+function giveDefaultContract(p) {
+  p.contractYears = (p.age <= 23 ? 3 : p.age <= 29 ? 2 : 1) + Math.floor(Math.random() * 2);
+  p.wage = defaultWage(p);
+  p.squadRole = defaultRole(p);
+}
+function signingDemands(p) {
+  const wantWage = Math.max(Math.round(defaultWage(p) * 1.15 * 10) / 10, Math.round((p.wage || defaultWage(p)) * 1.1 * 10) / 10);
+  const wantYears = p.age <= 23 ? 3 : p.age <= 29 ? 2 : 1;
+  let wantRole = p.rating >= 85 ? "Star" : p.rating >= 79 ? "First team" : "Rotation";
+  if (p.age <= 19 && p.rating < 79) wantRole = "Prospect";
+  return { wantWage, wantYears, wantRole };
+}
+function termsAccepted(demands, wage, years, role) {
+  if (!(wage > 0) || !Number.isFinite(years) || years < 1 || years > 5) return false;
+  if (!SQUAD_ROLES.includes(role)) return false;
+  if (years < demands.wantYears) return false;
+  const roleOk = ROLE_RANK[role] >= ROLE_RANK[demands.wantRole] ||
+    (ROLE_RANK[role] >= ROLE_RANK[demands.wantRole] - 1 && wage >= demands.wantWage * 1.3);
+  return roleOk && wage >= demands.wantWage - 0.05;
+}
+function enterTerms(game, offer, p) {
+  offer.status = "terms";
+  offer.terms = { tries: 0, ...signingDemands(p) };
+  offer.note = `Fee agreed with ${offer.sellerClub}. Now agree personal terms with ${p.name} in the Offers tab: wage, contract length and squad role. Two attempts before he walks.`;
+  romano(game, `🟢 ${offer.toClub} and ${offer.sellerClub} have a full agreement on ${p.name}, ${fmtFee(offer.fee)}. Personal terms are next, the player's camp is at the table now.`);
+}
+
 const ROLE_LABELS = {
   GK: "Goalkeeper", RB: "Right Back", CB: "Centre Back", LB: "Left Back",
   CDM: "Defensive Midfielder", CM: "Central Midfielder", CAM: "Attacking Midfielder",
   RW: "Right Winger", ST: "Striker", LW: "Left Winger",
   DF: "Defender", MF: "Midfielder", FW: "Forward"
 };
-function pushUnveil(game, p, club, dealType, fee) {
-  if (!game.unveil) game.unveil = { active: false, queue: [], seq: 0 };
-  game.unveil.seq = (game.unveil.seq || 0) + 1;
-  game.unveil.queue.push({
-    id: game.unveil.seq,
-    name: p.name,
-    role: ROLE_LABELS[p.role] || ROLE_LABELS[p.pos] || p.pos,
-    age: p.age,
-    rating: p.rating,
-    club,
-    dealType,
-    fee: fee || ""
-  });
-  game.unveil.queue = game.unveil.queue.slice(-8);
-  game.unveil.active = true;
-}
 
 const REAL_LOANS = {
   "Andre Onana": "Man United",
@@ -757,7 +776,7 @@ function stripFromLineup(club, id) {
 function voidOtherOffers(game, playerId, keepId) {
   for (const o of game.offers || []) {
     if (o.playerId !== playerId || o.id === keepId) continue;
-    if (["pending_seller", "countered"].includes(o.status)) {
+    if (["pending_seller", "countered", "terms"].includes(o.status)) {
       o.status = "void";
       o.note = "The player was sold in another deal, so this offer is dead.";
     }
@@ -798,10 +817,14 @@ function doTransfer(game, offer) {
     voidOtherOffers(game, sw.id, offer.id);
   }
   voidOtherOffers(game, p.id, offer.id);
+  if (p.pendingDeal) {
+    if (p.pendingDeal.toClub !== offer.toClub) romano(game, `💥 ${p.pendingDeal.toClub} thought they had ${p.name} agreed. ${offer.toClub} just took him instead. Brutal window.`);
+    delete p.pendingDeal;
+  }
+  if (!humanOf(game, offer.toClub)) giveDefaultContract(p);
+  if (sw && !humanOf(game, offer.sellerClub)) giveDefaultContract(sw);
   log(game, `TRANSFER: ${p.name} joins ${offer.toClub} from ${from} for £${offer.fee}m${sw ? ` plus ${sw.name} going the other way` : ""}.`);
   romano(game, `🚨✅ HERE WE GO! ${p.name} to ${offer.toClub}, done deal! ${fmtFee(offer.fee)}${sw ? " plus " + sw.name + " in a swap" : " package"} agreed with ${from}. Medical booked, contract signed.`);
-  if (humanOf(game, offer.toClub)) pushUnveil(game, p, offer.toClub, "SIGNED", fmtFee(offer.fee));
-  if (sw && humanOf(game, offer.sellerClub)) pushUnveil(game, sw, offer.sellerClub, "SIGNED", "swap deal");
   return { ok: true };
 }
 
@@ -824,6 +847,7 @@ function resolveAiSellerOffer(game, offer) {
         romano(game, `❌ BREAKING: ${p.name} to ${offer.toClub} is OFF! The clubs agreed a cash plus player deal but the player said no to the project.`);
         return;
       }
+      if (humanOf(game, offer.toClub) && offer.buyerUser) { enterTerms(game, offer, p); return; }
       const res = doTransfer(game, offer);
       offer.status = res.ok ? "accepted" : "failed";
       offer.note = res.ok ? `Deal done: £${offer.fee}m plus ${sw.name}. They valued the package at £${total}m against an ask of £${Math.round(baseAsk * 10) / 10}m.` : res.msg;
@@ -847,6 +871,7 @@ function resolveAiSellerOffer(game, offer) {
       romano(game, `❌ BREAKING: ${p.name} to ${offer.toClub} is OFF! Clubs had a full agreement at ${fmtFee(offer.fee)} but the player said no to the project. He is waiting for a bigger club.`);
       return;
     }
+    if (humanOf(game, offer.toClub) && offer.buyerUser) { enterTerms(game, offer, p); return; }
     const res = doTransfer(game, offer);
     offer.status = res.ok ? "accepted" : "failed";
     offer.note = res.ok ? `Deal completed at £${offer.fee}m.` : res.msg;
@@ -923,6 +948,7 @@ function aiToAiTransfers(game) {
   const committed = new Set((game.offers || [])
     .filter(o => ["pending_seller", "countered"].includes(o.status) && o.direction === "inbound")
     .map(o => o.fromClub));
+  for (const pl of Object.values(game.players)) if (pl.pendingDeal) committed.add(pl.pendingDeal.toClub);
   const buyers = shuffle(aiClubs.filter(c => c.budget >= 5 && c.squad.length < 29 && !committed.has(c.name)));
   // richer clubs shop more often, everyone shops sometimes
   const frenzy = deadlineDay(game);
@@ -935,7 +961,7 @@ function aiToAiTransfers(game) {
     const need = aiWeakestSpot(game, buyer);
     const wantKid = buyer.budget > (buyer.baseBudget || buyer.budget) * 0.6 && Math.random() < 0.3;
     const pool = Object.values(game.players).filter(p =>
-      p.club !== buyer.name && !p.academy && !p.loanOwner &&
+      p.club !== buyer.name && !p.academy && !p.loanOwner && !p.pendingDeal &&
       !humanOf(game, p.club) && game.clubs[p.club] &&
       (game.leagueFixtures || {})[p.league] &&
       game.clubs[p.club].squad.length > 15 &&
@@ -955,6 +981,17 @@ function aiToAiTransfers(game) {
       fee = Math.round(target.value * 1.3 * 10) / 10;
     }
     if (fee > buyer.budget) continue;
+    if (!frenzy) {
+      target.pendingDeal = { toClub: buyer.name, fee, agreed: game.round };
+      done++;
+      const loudA = target.rating >= 85 || humanLeagues.has(buyer.league) || humanLeagues.has(seller.name && seller.league);
+      if (loudA && posts < 3) {
+        posts++;
+        log(game, `AGREED: ${buyer.name} and ${target.club} have a £${fee}m deal for ${target.name}. Completing next week, unless someone hijacks it.`);
+        if (target.rating >= 84) romano(game, `🔴 Deal AGREED: ${target.name} to ${buyer.name}, ${fmtFee(fee)}. Paperwork this week, announcement next. Other clubs still lurking.`);
+      }
+      continue;
+    }
     buyer.budget = Math.round((buyer.budget - fee) * 10) / 10;
     seller.budget = Math.round((seller.budget + fee) * 10) / 10;
     seller.squad = seller.squad.filter(id => id !== target.id);
@@ -964,6 +1001,7 @@ function aiToAiTransfers(game) {
     target.club = buyer.name;
     target.league = buyer.league;
     target.listed = false;
+    giveDefaultContract(target);
     voidOtherOffers(game, target.id, -1);
     game.aiDeals = (game.aiDeals || 0) + 1;
     done++;
@@ -974,6 +1012,55 @@ function aiToAiTransfers(game) {
       if (target.rating >= 86) romano(game, `🚨✅ HERE WE GO! ${target.name} to ${buyer.name}, done deal! ${fmtFee(fee)} to ${from}. The AI clubs are spending big this window.`);
     }
   }
+}
+
+function completePendingDeals(game) {
+  const humanLeagues = new Set(Object.values(game.users).filter(u => u.team && game.clubs[u.team]).map(u => game.clubs[u.team].league));
+  let posts = 0;
+  for (const p of Object.values(game.players)) {
+    if (!p.pendingDeal || p.pendingDeal.agreed >= game.round) continue;
+    const deal = p.pendingDeal;
+    const buyer = game.clubs[deal.toClub];
+    const seller = game.clubs[p.club];
+    delete p.pendingDeal;
+    if (!buyer || !seller || humanOf(game, p.club)) continue;
+    if (buyer.budget < deal.fee || buyer.squad.length >= 30 || seller.squad.length <= 13) {
+      log(game, `COLLAPSED: the ${p.name} deal to ${deal.toClub} has fallen through at the last minute.`);
+      continue;
+    }
+    buyer.budget = Math.round((buyer.budget - deal.fee) * 10) / 10;
+    seller.budget = Math.round((seller.budget + deal.fee) * 10) / 10;
+    seller.squad = seller.squad.filter(id => id !== p.id);
+    stripFromLineup(seller, p.id);
+    buyer.squad.push(p.id);
+    const from = p.club;
+    p.club = deal.toClub;
+    p.league = buyer.league;
+    p.listed = false;
+    giveDefaultContract(p);
+    voidOtherOffers(game, p.id, -1);
+    game.aiDeals = (game.aiDeals || 0) + 1;
+    const loud = p.rating >= 85 || humanLeagues.has(buyer.league) || humanLeagues.has(seller.league);
+    if (loud && posts < 3) {
+      posts++;
+      log(game, `TRANSFER: ${p.name} joins ${deal.toClub} from ${from} for £${deal.fee}m.`);
+      if (p.rating >= 86) romano(game, `🚨✅ HERE WE GO, confirmed: ${p.name} to ${deal.toClub}, ${fmtFee(deal.fee)}. Announced as agreed last week. Nobody hijacked it.`);
+    }
+  }
+}
+
+function activeRivalOffers(game, playerId, notClub) {
+  return (game.offers || []).filter(o =>
+    o.playerId === playerId && ["pending_seller", "countered"].includes(o.status) && o.toClub && o.toClub !== notClub);
+}
+
+function hijackPrice(game, p, viewClub) {
+  if (p.pendingDeal) return Math.round(Math.max(p.pendingDeal.fee * 1.2, p.pendingDeal.fee + 2) * 10) / 10;
+  const rivals = activeRivalOffers(game, p.id, viewClub);
+  if (!rivals.length) return null;
+  const best = Math.max(...rivals.map(o => Math.max(o.fee || 0, o.counterFee || 0, o.demand || 0)));
+  const ask = game.clubs[p.club] ? askingPrice(game, p, p.club) : best;
+  return Math.round(Math.max(best * 1.15, ask) * 10) / 10;
 }
 
 function aiFreeAgentSignings(game) {
@@ -991,6 +1078,8 @@ function aiFreeAgentSignings(game) {
     p.club = club.name;
     p.league = club.league;
     p.loanOwner = null;
+    delete p.pendingDeal;
+    giveDefaultContract(p);
     club.squad.push(p.id);
     done++;
     log(game, `FREE TRANSFER: ${p.name} finds a new home at ${club.name} on a free.`);
@@ -1168,7 +1257,6 @@ function spawnWonderkids(game) {
 }
 
 function endOfSeason(game) {
-  game.unveil = { active: false, queue: [], seq: (game.unveil && game.unveil.seq) || 0 };
   settleStaleShootouts(game);
   const champions = {};
   game.lastTables = {};
@@ -1334,6 +1422,51 @@ function endOfSeason(game) {
     }
   }
   spawnWonderkids(game);
+  // contracts tick down, expiring players leave for nothing
+  let renewals = 0, walkouts = 0;
+  for (const p of Object.values(game.players)) {
+    if (p.academy || p.club === "" || p.contractYears === undefined) continue;
+    p.contractYears--;
+    if (p.contractYears > 0) continue;
+    const club = game.clubs[p.club];
+    if (!club) { giveDefaultContract(p); continue; }
+    const keepFloor = club.squad.length <= 16;
+    if (humanOf(game, p.club)) {
+      if (keepFloor) {
+        p.contractYears = 1;
+        log(game, `CONTRACT: ${p.name} grudgingly signs a one year extension at ${p.club} because the squad is too thin to lose him.`);
+      } else {
+        club.squad = club.squad.filter(id => id !== p.id);
+        stripFromLineup(club, p.id);
+        p.club = ""; p.league = ""; p.loanOwner = null; p.listed = false;
+        walkouts++;
+        log(game, `OUT OF CONTRACT: ${p.name} leaves ${club.name || "his club"} on a free. Nobody renewed his deal.`);
+        if (p.rating >= 82) romano(game, `🚨 FREE AGENT ALERT: ${p.name} has LEFT on a free transfer. His contract ran out and nobody moved. Huge chance for someone.`);
+      }
+    } else {
+      if (keepFloor || Math.random() < 0.75) { giveDefaultContract(p); renewals++; }
+      else {
+        club.squad = club.squad.filter(id => id !== p.id);
+        stripFromLineup(club, p.id);
+        p.club = ""; p.league = ""; p.loanOwner = null; p.listed = false;
+        walkouts++;
+        if (p.rating >= 82) romano(game, `🚨 FREE AGENT ALERT: ${p.name} is out of contract and available on a free. The scramble starts now.`);
+      }
+    }
+  }
+  if (walkouts) log(game, `${walkouts} players ran their contracts down and left on frees this summer. ${renewals} quietly renewed.`);
+  // no club starts a season below strength: thin squads promote youth
+  for (const [cname, club] of Object.entries(game.clubs)) {
+    if (!(game.leagueFixtures || {})[club.league] && !(LEAGUES[club.league] || {}).playable) continue;
+    let guardKid = 0;
+    while (club.squad.length < 15 && guardKid < 6) {
+      const kid = spawnRegen(game, cname, 60 + Math.floor(Math.random() * 8), 17 + Math.floor(Math.random() * 3));
+      guardKid++;
+      if (!kid) break;
+      giveDefaultContract(kid);
+      if (humanOf(game, cname)) log(game, `YOUTH PROMOTED: ${kid.name} (${kid.pos}, ${kid.rating}) steps up to the ${cname} first team to fill the gaps.`);
+    }
+  }
   for (const p of Object.values(game.players)) {
     if (p.club === "" && p.age >= 37) { delete game.players[p.id]; retired++; }
   }
@@ -1440,8 +1573,10 @@ function migrate(game) {
   if (!game.shootouts) game.shootouts = {};
   ensureRoles(game);
   for (const u of Object.values(game.users || {})) if (u.sacked === undefined) u.sacked = false;
-  if (!game.unveil) game.unveil = { active: false, queue: [], seq: 0 };
-  for (const p of Object.values(game.players || {})) if (PRODIGIES.has(p.name) && !p.prodigy) p.prodigy = true;
+  for (const p of Object.values(game.players || {})) {
+    if (PRODIGIES.has(p.name) && !p.prodigy) p.prodigy = true;
+    if (!p.academy && p.contractYears === undefined) giveDefaultContract(p);
+  }
   for (const c of Object.values(game.clubs || {})) if (c.baseBudget === undefined) c.baseBudget = c.budget;
   if (!game.cups) game.cups = {};
   for (const u of Object.values(game.users || {})) if (u.nation === undefined) u.nation = null;
@@ -1645,6 +1780,14 @@ function cupEvents(game, match) {
 function playMatchweek(game) {
   const wasOpen = windowOpen(game);
   const humanLeagues = new Set(Object.values(game.users).filter(u => u.team && game.clubs[u.team]).map(u => game.clubs[u.team].league));
+  if (game.round === 19) {
+    for (const u of Object.values(game.users)) {
+      if (!u.team) continue;
+      const expiring = game.clubs[u.team].squad.map(id => game.players[id])
+        .filter(x => x && !x.academy && x.contractYears === 1).map(x => x.name);
+      if (expiring.length) log(game, `CONTRACT WATCH ${u.team}: final year deals for ${expiring.slice(0, 6).join(", ")}${expiring.length > 6 ? " and more" : ""}. Renew in the Squad tab or lose them for free this summer.`);
+    }
+  }
   game.lastEvents = {};
   for (const [league, fixtures] of Object.entries(game.leagueFixtures)) {
     const round = fixtures[game.round];
@@ -1755,6 +1898,7 @@ function playMatchweek(game) {
   }
   const playedWeek = game.round;
   simCupsForWeek(game);
+  completePendingDeals(game);
   aiInboundBids(game);
   aiToAiTransfers(game);
   aiLoans(game);
@@ -1816,14 +1960,6 @@ app.post("/api/nextseason", (req, res) => {
   res.json({ ok: true });
 });
 
-app.post("/api/unveilclear", (req, res) => {
-  const ctx = getCtx(req, res); if (!ctx) return;
-  const { game, user } = ctx;
-  if (user.name !== game.host) return res.status(403).json({ error: "Only the host can end the unveiling." });
-  game.unveil = { active: false, queue: [], seq: (game.unveil && game.unveil.seq) || 0 };
-  save();
-  res.json({ ok: true });
-});
 
 app.post("/api/unlock", (req, res) => {
   const ctx = getCtx(req, res); if (!ctx) return;
@@ -1849,6 +1985,9 @@ app.post("/api/offer", (req, res) => {
   if (!(fee > 0)) return res.status(400).json({ error: "Enter a fee." });
   if (fee > game.clubs[user.team].budget) return res.status(400).json({ error: "That bid is over your budget." });
   if (game.clubs[p.club].squad.length <= 12) return res.status(400).json({ error: `${p.club} refuse to sell. Their squad is too thin.` });
+  if (!user.negos || user.negos.week !== game.round) user.negos = { week: game.round, count: 0 };
+  if (user.negos.count >= 2) return res.status(400).json({ error: "You have used both of your negotiations this week. Move fast next matchweek, the count resets then." });
+  user.negos.count++;
   const offer = {
     id: game.offerSeq++, playerId: p.id, toClub: user.team, sellerClub: p.club,
     fee, week: game.round, direction: "outbound", buyerUser: user.name
@@ -1875,6 +2014,127 @@ app.post("/api/offer", (req, res) => {
   game.offers = game.offers.slice(0, 200);
   save();
   res.json({ ok: true, offer });
+});
+
+app.post("/api/hijack", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  if (!windowOpen(game)) return res.status(400).json({ error: "The transfer window is shut. No hijacking until it reopens." });
+  const p = game.players[req.body.playerId];
+  if (!p) return res.status(400).json({ error: "Player not found." });
+  if (p.club === user.team) return res.status(400).json({ error: "He already plays for you." });
+  if (p.academy || p.loanOwner || p.club === "") return res.status(400).json({ error: "That deal cannot be hijacked." });
+  const price = hijackPrice(game, p, user.team);
+  if (price === null) return res.status(400).json({ error: "Nobody is negotiating for him right now. Just make a normal bid." });
+  const club = game.clubs[user.team];
+  if (price > club.budget) return res.status(400).json({ error: `Hijacking this deal costs £${price}m and that is over your budget.` });
+  if (club.squad.length >= 30) return res.status(400).json({ error: "Squad is full (30 max). Sell someone first." });
+  if (!user.negos || user.negos.week !== game.round) user.negos = { week: game.round, count: 0 };
+  if (user.negos.count >= 2) return res.status(400).json({ error: "You have used both of your negotiations this week. Move fast next matchweek, the count resets then." });
+  user.negos.count++;
+  const jilted = p.pendingDeal ? p.pendingDeal.toClub : (activeRivalOffers(game, p.id, user.team)[0] || {}).toClub;
+  const offer = {
+    id: game.offerSeq++, playerId: p.id, toClub: user.team, sellerClub: p.club,
+    fee: price, week: game.round, direction: "outbound", buyerUser: user.name, hijack: true
+  };
+  romano(game, `🚀 HIJACK ATTEMPT: ${user.team} have stormed into the ${p.name} deal with a £${price}m package, trying to gazump ${jilted || "the competition"}. Chaos in the market.`);
+  if (humanOf(game, p.club)) {
+    offer.status = "pending_seller";
+    log(game, `${user.team} are trying to hijack the ${p.name} deal with a £${price}m bid to ${p.club}.`);
+  } else if (p.pendingDeal) {
+    delete p.pendingDeal;
+    if (p.rating >= 85 && p.age > 22 && !BIG_CLUBS.includes(user.team) && Math.random() < 0.45) {
+      offer.status = "player_declined";
+      offer.note = `You gazumped ${jilted} but ${p.name} said no to your project. The original deal is dead too. Expensive chaos.`;
+      romano(game, `❌ Twist: ${p.name} has rejected the hijack from ${user.team}. And the ${jilted} deal is off as well. Everyone loses.`);
+    } else {
+      const r = doTransfer(game, offer);
+      offer.status = r.ok ? "accepted" : "failed";
+      offer.note = r.ok ? `Hijack complete. You stole him from under ${jilted} for £${price}m.` : r.msg;
+      if (r.ok) romano(game, `💥✅ HIJACKED and DONE: ${p.name} joins ${user.team}, not ${jilted}. £${price}m. One of the great window betrayals.`);
+    }
+  } else {
+    resolveAiSellerOffer(game, offer);
+    for (const o of activeRivalOffers(game, p.id, user.team)) {
+      if (offer.status === "accepted" || offer.status === "terms") { o.status = "void"; o.note = `HIJACKED: ${user.team} gazumped your deal for ${p.name}.`; }
+    }
+  }
+  game.offers.unshift(offer);
+  game.offers = game.offers.slice(0, 200);
+  save();
+  res.json({ ok: true, offer, price });
+});
+
+app.post("/api/terms", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  const offer = game.offers.find(o => o.id === Number(req.body.offerId));
+  if (!offer) return res.status(404).json({ error: "Offer not found." });
+  if (offer.status !== "terms") return res.status(400).json({ error: "Personal terms are not on the table for this offer." });
+  if (offer.buyerUser !== user.name) return res.status(403).json({ error: "This is not your negotiation." });
+  const p = game.players[offer.playerId];
+  if (!p || p.club !== offer.sellerClub) { offer.status = "void"; offer.note = "The player already left that club."; save(); return res.json({ ok: true, offer }); }
+  const wage = Math.round(Number(req.body.wage) * 10) / 10;
+  const years = Math.floor(Number(req.body.years));
+  const role = String(req.body.role || "");
+  if (termsAccepted(offer.terms, wage, years, role)) {
+    const r = doTransfer(game, offer);
+    if (r.ok) {
+      p.wage = wage;
+      p.contractYears = years;
+      p.squadRole = role;
+      offer.status = "accepted";
+      offer.note = `Personal terms agreed: £${wage}m a season, ${years} year${years > 1 ? "s" : ""}, ${role}. Welcome to ${offer.toClub}.`;
+      romano(game, `🖊️ Contract SIGNED: ${p.name} agrees personal terms with ${offer.toClub}. £${wage}m a season until ${2026 + game.season + years}. All done.`);
+    } else {
+      offer.status = "failed";
+      offer.note = r.msg;
+    }
+  } else {
+    offer.terms.tries++;
+    if (offer.terms.tries >= 2) {
+      offer.status = "player_declined";
+      offer.note = `${p.name} has walked away from the table. The terms never got close to what his camp wanted.`;
+      romano(game, `❌ COLLAPSED at the last stage: ${p.name} to ${offer.toClub} is OFF. Clubs had a full agreement but personal terms broke down.`);
+    } else {
+      const d = offer.terms;
+      offer.note = `${p.name}'s camp rejected that. They want around £${d.wantWage}m a season, at least ${d.wantYears} year${d.wantYears > 1 ? "s" : ""}, coming in as ${d.wantRole === "Prospect" ? "a Prospect" : d.wantRole === "Star" ? "the Star man" : d.wantRole}. One more try before he walks.`;
+    }
+  }
+  save();
+  res.json({ ok: true, offer });
+});
+
+app.post("/api/renegotiate", (req, res) => {
+  const ctx = getCtx(req, res); if (!ctx) return;
+  const { game, user } = ctx;
+  if (!user.team) return res.status(400).json({ error: "Pick a club first." });
+  const p = game.players[req.body.playerId];
+  if (!p) return res.status(400).json({ error: "Player not found." });
+  const mine = p.club === user.team || (p.loanOwner === user.team && p.club !== user.team);
+  if (!mine) return res.status(400).json({ error: "He is not your player." });
+  if (p.loanOwner && p.loanOwner !== user.team) return res.status(400).json({ error: "He is only on loan with you. His contract belongs to his parent club." });
+  if (p.academy) return res.status(400).json({ error: "Academy contracts are handled by the academy." });
+  const wage = Math.round(Number(req.body.wage) * 10) / 10;
+  const years = Math.floor(Number(req.body.years));
+  const role = String(req.body.role || "");
+  const demands = {
+    wantWage: Math.max(Math.round((p.wage || defaultWage(p)) * 1.05 * 10) / 10, Math.round(defaultWage(p) * 1.05 * 10) / 10),
+    wantYears: 1,
+    wantRole: SQUAD_ROLES[Math.max(0, ROLE_RANK[p.squadRole || defaultRole(p)] - 1)]
+  };
+  if (termsAccepted(demands, wage, years, role)) {
+    p.wage = wage;
+    p.contractYears = years;
+    p.squadRole = role;
+    log(game, `RENEWED: ${p.name} signs fresh terms at ${user.team}. £${wage}m a season for ${years} year${years > 1 ? "s" : ""} as ${role}.`);
+    if (p.rating >= 84) romano(game, `✅ Contract news: ${p.name} has renewed with ${user.team} until ${2026 + game.season + years}. Big statement from the club.`);
+    save();
+    return res.json({ ok: true, accepted: true });
+  }
+  save();
+  res.json({ ok: true, accepted: false, note: `${p.name} said no to those terms. His camp wants around £${demands.wantWage}m a season and no demotion below ${demands.wantRole}.` });
 });
 
 app.post("/api/respond", (req, res) => {
@@ -1912,15 +2172,20 @@ app.post("/api/respond", (req, res) => {
           stripFromLineup(seller, p.id);
           buyer.squad.push(p.id);
           p.club = offer.fromClub; p.league = buyer.league; p.listed = false;
+          delete p.pendingDeal;
+          giveDefaultContract(p);
           offer.status = "accepted";
           voidOtherOffers(game, p.id, offer.id);
           log(game, `TRANSFER: ${p.name} leaves ${offer.sellerClub} for ${offer.fromClub}, £${offer.fee}m.`);
           romano(game, `🚨✅ HERE WE GO! ${p.name} to ${offer.fromClub}, confirmed! ${fmtFee(offer.fee)} to ${offer.sellerClub}. Agreement completed, players and clubs all happy.`);
         }
       } else {
-        const r = doTransfer(game, offer);
-        offer.status = r.ok ? "accepted" : "failed";
-        if (!r.ok) offer.note = r.msg;
+        if (humanOf(game, offer.toClub) && offer.buyerUser) { enterTerms(game, offer, p); }
+        else {
+          const r = doTransfer(game, offer);
+          offer.status = r.ok ? "accepted" : "failed";
+          if (!r.ok) offer.note = r.msg;
+        }
       }
     } else if (action === "decline") {
       offer.status = "declined";
@@ -1942,9 +2207,12 @@ app.post("/api/respond", (req, res) => {
       if (offer.direction === "inbound") return res.status(400).json({ error: "Not applicable." });
       const sellerHuman = humanOf(game, offer.sellerClub);
       if (sellerHuman) {
-        const r = doTransfer(game, offer);
-        offer.status = r.ok ? "accepted" : "failed";
-        if (!r.ok) offer.note = r.msg;
+        if (humanOf(game, offer.toClub) && offer.buyerUser) { enterTerms(game, offer, p); }
+        else {
+          const r = doTransfer(game, offer);
+          offer.status = r.ok ? "accepted" : "failed";
+          if (!r.ok) offer.note = r.msg;
+        }
       } else {
         if (game.clubs[offer.toClub].budget < offer.fee) return res.status(400).json({ error: "That counter is over your budget." });
         resolveAiSellerOffer(game, offer);
@@ -2027,9 +2295,10 @@ app.post("/api/signfree", (req, res) => {
   p.club = user.team;
   p.league = club.league;
   p.loanOwner = null;
+  delete p.pendingDeal;
+  giveDefaultContract(p);
   club.squad.push(p.id);
   log(game, `FREE TRANSFER: ${p.name} signs for ${user.team} on a free. No fee, no drama.`);
-  pushUnveil(game, p, user.team, "FREE TRANSFER", "");
   if (p.rating >= 80) romano(game, `\u270d\ufe0f Here we go, on a FREE: ${p.name} joins ${user.team}. The best kind of business.`);
   save();
   res.json({ ok: true });
@@ -2131,7 +2400,6 @@ app.post("/api/loanin", (req, res) => {
   p.listed = false;
   voidOtherOffers(game, p.id, -1);
   log(game, `LOAN: ${p.name} joins ${user.team} on loan from ${owner.name} for a £${fee}m fee, with an option to buy at value.`);
-  pushUnveil(game, p, user.team, "ON LOAN", "");
   romano(game, `\ud83d\udfe1 Here we go, loan version: ${p.name} to ${user.team} on a season long deal! ${fmtFee(fee)} loan fee to ${owner.name}, option to buy included.`);
   save();
   res.json({ ok: true, fee });
@@ -2154,7 +2422,6 @@ app.post("/api/buyloan", (req, res) => {
   delete p.loanOwner;
   delete p.loanFee;
   log(game, `PERMANENT: ${user.team} trigger the option to buy on ${p.name}, £${price}m to ${from}.`);
-  pushUnveil(game, p, user.team, "SIGNED", fmtFee(price));
   romano(game, `🚨✅ HERE WE GO! ${user.team} make the ${p.name} loan PERMANENT. Option to buy triggered, ${fmtFee(price)} to ${from}. Loved it there, staying for good.`);
   save();
   res.json({ ok: true });
@@ -2254,6 +2521,7 @@ app.get("/api/state", (req, res) => {
   for (const league of Object.keys(game.leagueFixtures || {})) tables[league] = tableFor(game, league);
   res.json({
     code: game.code,
+    negosLeft: (user.negos && user.negos.week === game.round) ? Math.max(0, 2 - user.negos.count) : 2,
     you: user.name,
     host: game.host,
     started: game.started,
@@ -2365,7 +2633,6 @@ app.get("/api/state", (req, res) => {
       for (const league of Object.keys(game.leagueFixtures || {})) out[league] = statBoards(game, league);
       return out;
     })(),
-    unveil: game.unveil || { active: false, queue: [] },
     thisWeek: (myFix[game.round] || []).map(m => ({ ...m, derby: isDerby(m.home, m.away) })),
     lastWeek: game.round > 0 ? (myFix[game.round - 1] || []).map(m => ({ ...m, derby: isDerby(m.home, m.away) })) : [],
     myFixtures: myTeam ? myFix.map((r, i) => {
@@ -2396,7 +2663,10 @@ app.get("/api/market", (req, res) => {
     players: list.slice(0, 60).map(p => ({
       ...p,
       asking: askingPrice(game, p, p.club),
-      humanOwned: !!humanOf(game, p.club)
+      humanOwned: !!humanOf(game, p.club),
+      deal: p.pendingDeal ? { club: p.pendingDeal.toClub, fee: p.pendingDeal.fee } : null,
+      nego: (activeRivalOffers(game, p.id, user.team)[0] || null) && { club: activeRivalOffers(game, p.id, user.team)[0].toClub },
+      hijackPrice: hijackPrice(game, p, user.team)
     })),
     freeAgents: free.slice(0, 30).map(p => ({ id: p.id, name: p.name, age: p.age, rating: p.rating, role: p.role, pos: p.pos })),
     leagues: [...new Set(Object.values(game.players).map(p => p.league))].filter(l => l).sort()

@@ -361,205 +361,36 @@ tr.me td{background:rgba(255,180,36,.06)}
 
 @media(max-width:900px){.lobbygrid{grid-template-columns:1fr}.lobbyleft{border-right:none;border-bottom:1px solid var(--line);padding:26px 22px}.lobbyright{padding:20px 22px}.statblk{border-left:none;padding:0 14px 0 0}.hubhead{padding:18px 16px 14px}}
 </style>
-<style id="unv-styles">
-  #unv-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 99999;
-    overflow: hidden;
-    cursor: pointer;
-    background:
-      radial-gradient(120% 90% at 50% 110%, rgba(216, 180, 90, 0.10) 0%, rgba(0, 0, 0, 0) 45%),
-      radial-gradient(140% 100% at 50% 0%, #171b26 0%, #0a0c12 60%, #060709 100%);
-    display: grid;
-    place-items: center;
-    animation: unv-fade-in 0.25s ease-out both;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-  #unv-overlay.unv-closing { transition: opacity 0.35s ease; opacity: 0; }
-  @keyframes unv-fade-in { from { opacity: 0; } to { opacity: 1; } }
-  .unv-crowd {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 28%;
-    background-image:
-      radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1.5px),
-      radial-gradient(rgba(216, 180, 90, 0.04) 1px, transparent 1.5px);
-    background-size: 14px 10px, 22px 16px;
-    background-position: 0 0, 7px 5px;
-    -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-    mask-image: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-    pointer-events: none;
-  }
-  .unv-beam {
-    position: absolute; top: -20vmax; left: 50%; width: 24vmax; height: 160vmax; margin-left: -12vmax;
-    transform-origin: 50% 10vmax;
-    background: linear-gradient(to bottom, rgba(255, 244, 214, 0.16), rgba(255, 244, 214, 0.02) 60%, transparent 80%);
-    filter: blur(6px); opacity: 0; pointer-events: none;
-  }
-  .unv-beam-l { animation: unv-sweep-l 2.4s cubic-bezier(0.55, 0, 0.3, 1) 0.1s both; }
-  .unv-beam-r { animation: unv-sweep-r 2.4s cubic-bezier(0.55, 0, 0.3, 1) 0.1s both; }
-  @keyframes unv-sweep-l {
-    0%   { transform: rotate(-55deg); opacity: 0; }
-    15%  { opacity: 1; }
-    60%  { transform: rotate(8deg); opacity: 0.9; }
-    100% { transform: rotate(-4deg); opacity: 0; }
-  }
-  @keyframes unv-sweep-r {
-    0%   { transform: rotate(55deg); opacity: 0; }
-    15%  { opacity: 1; }
-    60%  { transform: rotate(-8deg); opacity: 0.9; }
-    100% { transform: rotate(4deg); opacity: 0; }
-  }
-  .unv-stage {
-    position: relative; display: grid; justify-items: center;
-    gap: clamp(6px, 1.4vh, 14px); padding: 0 16px; max-width: 94vw; text-align: center; pointer-events: none;
-  }
-  .unv-club {
-    font-family: 'IBM Plex Mono', monospace; font-weight: 600;
-    font-size: clamp(12px, 2.4vw, 18px); letter-spacing: 0.55em; text-indent: 0.55em;
-    text-transform: uppercase; color: var(--dim, #8b90a0);
-    animation: unv-club-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s both;
-  }
-  @keyframes unv-club-in {
-    from { opacity: 0; letter-spacing: 1.1em; filter: blur(4px); }
-    to   { opacity: 1; letter-spacing: 0.55em; filter: blur(0); }
-  }
-  .unv-jersey {
-    width: clamp(150px, 26vmin, 240px); height: auto;
-    filter: drop-shadow(0 10px 40px rgba(216, 180, 90, 0.22));
-    animation: unv-jersey-in 0.8s cubic-bezier(0.2, 1.2, 0.3, 1) 0.65s both;
-  }
-  @keyframes unv-jersey-in {
-    from { opacity: 0; transform: translateY(40px) scale(0.8); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .unv-jersey-name {
-    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 2px;
-    text-transform: uppercase; fill: var(--gold, #d8b45a);
-  }
-  .unv-jersey-num { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; fill: var(--gold, #d8b45a); }
-  .unv-name {
-    font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
-    font-size: clamp(44px, 13vw, 128px); line-height: 0.92; text-transform: uppercase;
-    letter-spacing: 0.01em; color: #f4f5f8; text-shadow: 0 0 60px rgba(216, 180, 90, 0.35);
-    animation: unv-name-slam 0.45s cubic-bezier(0.15, 0.9, 0.2, 1.15) 1.05s both;
-  }
-  @keyframes unv-name-slam {
-    0%   { opacity: 0; transform: scale(2.4); filter: blur(14px); }
-    70%  { opacity: 1; filter: blur(0); }
-    100% { opacity: 1; transform: scale(1); }
-  }
-  .unv-meta {
-    display: flex; align-items: baseline; gap: clamp(10px, 2.5vw, 22px);
-    font-family: Barlow, sans-serif; font-weight: 600; font-size: clamp(14px, 3vw, 20px);
-    letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim, #8b90a0);
-    animation: unv-meta-in 0.5s ease-out 1.55s both;
-  }
-  @keyframes unv-meta-in {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .unv-meta-sep { color: rgba(216, 180, 90, 0.5); }
-  .unv-rating {
-    font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
-    font-size: clamp(22px, 4.6vw, 34px); letter-spacing: 0.02em;
-    background: linear-gradient(100deg, var(--gold, #d8b45a) 0%, var(--gold, #d8b45a) 38%, #fff6dc 50%, var(--gold, #d8b45a) 62%, var(--gold, #d8b45a) 100%);
-    background-size: 300% 100%; background-position: 100% 0;
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent; color: var(--gold, #d8b45a);
-    animation: unv-shimmer 1.1s ease-in-out 1.7s both;
-  }
-  @keyframes unv-shimmer { from { background-position: 100% 0; } to { background-position: 0% 0; } }
-  .unv-stamp {
-    display: inline-flex; align-items: baseline; gap: 0.7em;
-    font-family: 'IBM Plex Mono', monospace; font-weight: 600;
-    font-size: clamp(14px, 3.4vw, 24px); letter-spacing: 0.28em; text-indent: 0.28em;
-    padding: 0.5em 1em 0.5em 1.1em; color: var(--gold, #d8b45a);
-    border: 2px solid var(--gold, #d8b45a);
-    box-shadow: 0 0 0 4px rgba(216, 180, 90, 0.12), inset 0 0 24px rgba(216, 180, 90, 0.08);
-    transform: rotate(-4deg);
-    animation: unv-stamp-in 0.3s cubic-bezier(0.2, 1.6, 0.4, 1) 2.05s both;
-  }
-  .unv-stamp-fee { color: #f4f5f8; letter-spacing: 0.1em; text-indent: 0; }
-  @keyframes unv-stamp-in {
-    0%   { opacity: 0; transform: rotate(-4deg) scale(3); }
-    60%  { opacity: 1; transform: rotate(-4deg) scale(0.94); }
-    100% { opacity: 1; transform: rotate(-4deg) scale(1); }
-  }
-  .unv-burst { position: absolute; left: 50%; top: 46%; width: 0; height: 0; pointer-events: none; }
-  .unv-p {
-    position: absolute; left: 0; top: 0;
-    width: var(--unv-s, 7px); height: calc(var(--unv-s, 7px) * 0.55);
-    background: var(--unv-c, var(--gold, #d8b45a)); opacity: 0;
-    animation: unv-p-fly 1.4s cubic-bezier(0.1, 0.8, 0.4, 1) var(--unv-d, 1.5s) both;
-  }
-  @keyframes unv-p-fly {
-    0%   { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(1); }
-    8%   { opacity: 1; }
-    100% { opacity: 0; transform: translate(var(--unv-x, 0px), var(--unv-y, -200px)) rotate(var(--unv-r, 540deg)) scale(0.6); }
-  }
-  .unv-hint {
-    position: absolute; bottom: max(18px, env(safe-area-inset-bottom, 0px)); left: 0; right: 0;
-    text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-    letter-spacing: 0.3em; text-indent: 0.3em; text-transform: uppercase;
-    color: var(--dim, #8b90a0); opacity: 0;
-    animation: unv-hint-in 0.6s ease 1.2s both; pointer-events: none;
-  }
-  @keyframes unv-hint-in { to { opacity: 0.55; } }
-  @media (prefers-reduced-motion: reduce) {
-    #unv-overlay *, #unv-overlay { animation-duration: 0.01s !important; animation-delay: 0s !important; }
-  }
-  #unvRoom {
-    position: fixed; inset: 0; z-index: 99990;
-    background: rgba(6, 7, 9, 0.94); display: grid; place-items: center; text-align: center;
-  }
-  #unvRoom .unvRoomTitle {
-    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 26px;
-    letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold, #d8b45a);
-  }
-  #unvRoom .unvRoomSub { color: var(--dim, #8b90a0); font-size: 13px; letter-spacing: 0.06em; margin-top: 10px; }
+<style id="extra-styles">
   .tag.derby { background: rgba(216, 70, 70, 0.16); color: #ff9e7a; border: 1px solid rgba(216, 70, 70, 0.55); }
+  .tag.nego { background: rgba(216, 180, 90, 0.12); color: var(--gold); border: 1px solid rgba(216, 180, 90, 0.45); }
+  .ct-modal { position: fixed; inset: 0; z-index: 9000; background: rgba(6,7,9,0.85); display: grid; place-items: center; }
+  .ct-card { background: #12151f; border: 1px solid var(--line); padding: 22px; width: min(92vw, 380px); }
+  .ct-card h3 { margin: 0 0 4px; }
+  .ct-card .row { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
+  .ct-card label { width: 110px; color: var(--dim); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .ct-card input, .ct-card select { flex: 1; background: #0b0e15; border: 1px solid var(--line); color: #f4f5f8; padding: 8px; font-family: inherit; }
+  .ct-note { color: var(--dim); font-size: 12px; margin-top: 10px; min-height: 16px; }
 </style>
 </head>
 <body>
-<template id="unv-template">
-  <div id="unv-overlay" role="dialog" aria-label="New signing announcement">
-    <div class="unv-crowd"></div>
-    <div class="unv-beam unv-beam-l"></div>
-    <div class="unv-beam unv-beam-r"></div>
-    <div class="unv-burst"></div>
-    <div class="unv-stage">
-      <div class="unv-club"></div>
-      <svg class="unv-jersey" viewBox="0 0 200 210" aria-hidden="true">
-        <path d="M63 12 L24 34 L38 76 L56 66 L56 196 L144 196 L144 66 L162 76 L176 34 L137 12 C126 26 113 32 100 32 C87 32 74 26 63 12 Z" fill="#12151f" stroke="var(--gold, #d8b45a)" stroke-width="3" stroke-linejoin="round"></path>
-        <path d="M78 14 C85 24 92 28 100 28 C108 28 115 24 122 14" fill="none" stroke="var(--gold, #d8b45a)" stroke-width="3" stroke-linecap="round"></path>
-        <text class="unv-jersey-name" x="100" y="86" text-anchor="middle" font-size="17"></text>
-        <text class="unv-jersey-num" x="100" y="164" text-anchor="middle" font-size="76"></text>
-      </svg>
-      <div class="unv-name"></div>
-      <div class="unv-meta">
-        <span class="unv-role"></span>
-        <span class="unv-meta-sep">/</span>
-        <span class="unv-age"></span>
-        <span class="unv-meta-sep">/</span>
-        <span class="unv-rating"></span>
-      </div>
-      <div class="unv-stamp">
-        <span class="unv-stamp-deal"></span>
-        <span class="unv-stamp-fee"></span>
-      </div>
+<div id="ctModal" class="ct-modal hidden">
+  <div class="ct-card">
+    <h3 id="ctName">Contract terms</h3>
+    <div class="msub" id="ctCurrent"></div>
+    <div class="row"><label>Wage m/season</label><input id="ctWage" type="number" step="0.1" min="0.1"></div>
+    <div class="row"><label>Length</label><select id="ctYears">
+      <option value="1">1 year</option><option value="2">2 years</option><option value="3">3 years</option>
+      <option value="4">4 years</option><option value="5">5 years</option></select></div>
+    <div class="row"><label>Squad role</label><select id="ctRole">
+      <option>Star</option><option>First team</option><option>Rotation</option><option>Prospect</option></select></div>
+    <div class="ct-note" id="ctNote"></div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="small ghost" onclick="closeTerms()">Close</button>
+      <button class="small" id="ctSave">Offer new terms</button>
     </div>
-    <div class="unv-hint">Tap to skip</div>
-  </div>
-</template>
-<div id="unvRoom" class="hidden">
-  <div>
-    <div class="unvRoomTitle">Unveiling in progress</div>
-    <p id="unvWait" class="unvRoomSub hidden">Waiting for the host to end the presentation</p>
-    <button id="unvExitBtn" class="gold hidden" style="margin-top:16px">Back to the game (host)</button>
   </div>
 </div>
-
 <div id="lobby">
   <h1>Flood<span>lights</span></h1>
   <p class="msub" style="letter-spacing:.3em;margin-top:-10px">World career mode</p>
@@ -653,7 +484,7 @@ tr.me td{background:rgba(255,180,36,.06)}
           <option value="defensive">Defensive</option>
         </select>
       </div>
-      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rating</th><th class="num">Value</th><th></th></tr></thead>
+      <table><thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">Rating</th><th class="num">Value</th><th>Contract</th><th></th></tr></thead>
       <tbody id="squadBody"></tbody></table>
       <div id="loanOutBox"></div>
       <div class="controls" style="margin-top:6px">
@@ -1287,11 +1118,15 @@ function render() {
            <button class="small ghost" onclick="setTrain(${s.myClub.trainFocus === p.id ? "null" : p.id})">${s.myClub.trainFocus === p.id ? "Stop" : "Train"}</button>
            ${p.age <= 23 ? `<button class="small ghost" onclick="loanOut(${p.id})">Loan out</button>` : ""}
            <button class="small ghost" onclick="releasePlayer(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Release</button>`;
+      const ct = onLoanHere ? '<span class="msub">parent club deal</span>' :
+        `${p.contractYears !== undefined ? p.contractYears + "y" : ""} \u00b7 ${money(p.wage || 0)}/s \u00b7 ${p.squadRole || ""}${p.contractYears === 1 ? ' <span class="tag inj">EXPIRING</span>' : ''}`;
+      const ctBtn = onLoanHere ? "" : ` <button class="small ghost" onclick="openTerms(${p.id})">Terms</button>`;
       return `
       <tr><td>${p.name} ${tags}</td>
       <td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
       <td class="num">${money(p.value)}</td>
-      <td style="white-space:nowrap">${acts}</td></tr>`;
+      <td style="white-space:nowrap;font-size:12px">${ct}</td>
+      <td style="white-space:nowrap">${acts}${ctBtn}</td></tr>`;
     }).join("");
     const outs = s.myClub.loanedOut || [];
     if ($("loanOutBox")) $("loanOutBox").innerHTML = !outs.length ? "" : `
@@ -1349,7 +1184,6 @@ function render() {
   $("simBtn").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone));
   $("ffBtn18").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone && s.round < 18));
   $("ffBtn37").classList.toggle("hidden", !(s.you === s.host && s.started && !seasonDone && s.round < 37));
-  unvRender(s);
   $("nextSeasonBtn").classList.toggle("hidden", !(s.you === s.host && s.started && seasonDone));
   if ($("seasonOverTag")) $("seasonOverTag").classList.toggle("hidden", !seasonDone);
   $("thisWeek").innerHTML = s.thisWeek.map(m => fixtureRow(m, s)).join("") || "<p style='color:var(--dim)'>Season done. New one starts on next sim.</p>";
@@ -1467,6 +1301,18 @@ function offerCard(o, role) {
     <button class="small red" onclick="respond(${o.id},'decline')">Decline</button>
     <button class="small ghost" onclick="respond(${o.id},'counter', prompt('Counter fee in £m'))">Counter</button>` :
     `<span class="tag">Window shut</span> <button class="small red" onclick="respond(${o.id},'decline')">Decline</button>`;
+  if (o.status === "terms" && role === "buyer") actions = `
+    <div class="row" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <input id="tw${o.id}" type="number" step="0.1" min="0.1" placeholder="Wage m/season" style="width:120px;background:#0b0e15;border:1px solid var(--line);color:#f4f5f8;padding:6px">
+      <select id="ty${o.id}" style="background:#0b0e15;border:1px solid var(--line);color:#f4f5f8;padding:6px">
+        <option value="1">1 year</option><option value="2">2 years</option><option value="3" selected>3 years</option><option value="4">4 years</option><option value="5">5 years</option>
+      </select>
+      <select id="tr${o.id}" style="background:#0b0e15;border:1px solid var(--line);color:#f4f5f8;padding:6px">
+        <option>Star</option><option selected>First team</option><option>Rotation</option><option>Prospect</option>
+      </select>
+      <button class="small" onclick="sendTerms(${o.id})">Offer terms</button>
+      <button class="small red" onclick="respond(${o.id},'withdraw')">Walk away</button>
+    </div>`;
   if (o.status === "countered" && role === "buyer") actions = open ? `
     <button class="small" onclick="respond(${o.id},'accept')">Pay ${money(o.counterFee)}</button>
     <button class="small ghost" onclick="respond(${o.id},'counter', prompt('New fee in £m'))">Counter</button>
@@ -2061,117 +1907,7 @@ window.simTo = async n => {
 };
 $("ffBtn18").onclick = () => simTo(18);
 $("ffBtn37").onclick = () => simTo(37);
-(function () {
-  'use strict';
-  var TOTAL_MS = 3800;
-  var FADE_MS = 350;
-  var timers = [];
-  var currentDone = null;
 
-  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
-
-  function finish() {
-    if (currentDone) { var f = currentDone; currentDone = null; f(); }
-  }
-
-  function teardown(overlay, soft) {
-    clearTimers();
-    if (!overlay || !overlay.parentNode) { finish(); return; }
-    if (soft) {
-      overlay.classList.add('unv-closing');
-      setTimeout(function () { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, FADE_MS);
-    } else {
-      overlay.parentNode.removeChild(overlay);
-    }
-    finish();
-  }
-
-  function spawnBurst(container) {
-    var colors = ['#d8b45a', '#f2dfae', '#fff6dc', '#b98f3a', '#ffffff'];
-    for (var i = 0; i < 70; i++) {
-      var p = document.createElement('div');
-      p.className = 'unv-p';
-      var ang = Math.random() * Math.PI * 2;
-      var dist = 90 + Math.random() * 260;
-      var x = Math.cos(ang) * dist;
-      var y = Math.sin(ang) * dist * 0.85 - 60 + Math.random() * 60;
-      p.style.setProperty('--unv-x', x.toFixed(0) + 'px');
-      p.style.setProperty('--unv-y', y.toFixed(0) + 'px');
-      p.style.setProperty('--unv-r', (360 + Math.random() * 540).toFixed(0) + 'deg');
-      p.style.setProperty('--unv-s', (5 + Math.random() * 7).toFixed(1) + 'px');
-      p.style.setProperty('--unv-d', (1.5 + Math.random() * 0.25).toFixed(2) + 's');
-      p.style.setProperty('--unv-c', colors[i % colors.length]);
-      container.appendChild(p);
-    }
-  }
-
-  function surname(name) {
-    var parts = String(name || '').trim().split(/\s+/);
-    return parts.length > 1 ? parts[parts.length - 1] : parts[0] || '';
-  }
-
-  window.showUnveiling = function (data, onDone) {
-    data = data || {};
-    var existing = document.getElementById('unv-overlay');
-    if (existing) teardown(existing, false);
-    clearTimers();
-    currentDone = typeof onDone === 'function' ? onDone : null;
-
-    var tpl = document.getElementById('unv-template');
-    if (!tpl) { finish(); return; }
-    var overlay = tpl.content.firstElementChild.cloneNode(true);
-
-    overlay.querySelector('.unv-club').textContent = data.club || '';
-    overlay.querySelector('.unv-name').textContent = data.name || '';
-    overlay.querySelector('.unv-role').textContent = data.role || '';
-    overlay.querySelector('.unv-age').textContent = data.age != null ? 'Age ' + data.age : '';
-    overlay.querySelector('.unv-rating').textContent = data.rating != null ? String(data.rating) : '';
-    overlay.querySelector('.unv-jersey-name').textContent = surname(data.name).toUpperCase();
-    overlay.querySelector('.unv-jersey-num').textContent = data.rating != null ? String(data.rating) : '';
-    overlay.querySelector('.unv-stamp-deal').textContent = data.dealType || 'SIGNED';
-    var feeEl = overlay.querySelector('.unv-stamp-fee');
-    if (data.fee) { feeEl.textContent = data.fee; } else { feeEl.parentNode.removeChild(feeEl); }
-
-    spawnBurst(overlay.querySelector('.unv-burst'));
-    overlay.addEventListener('click', function () { teardown(overlay, false); });
-    document.body.appendChild(overlay);
-    timers.push(setTimeout(function () { teardown(overlay, true); }, TOTAL_MS));
-  };
-
-  window.unvKill = function () {
-    var o = document.getElementById('unv-overlay');
-    if (o) teardown(o, false);
-  };
-})();
-
-let UNV_LAST = 0, UNV_BUSY = false, UNV_PEND = [], UNV_GAME = "";
-function unvNext() {
-  if (UNV_BUSY || !UNV_PEND.length) return;
-  const item = UNV_PEND.shift();
-  UNV_LAST = Math.max(UNV_LAST, item.id);
-  UNV_BUSY = true;
-  showUnveiling(item, () => { UNV_BUSY = false; unvNext(); });
-}
-function unvRender(s) {
-  const u = s.unveil || { active: false, queue: [] };
-  const room = $("unvRoom");
-  if (!room) return;
-  if ((s.code || "") !== UNV_GAME) { UNV_GAME = s.code || ""; UNV_LAST = 0; UNV_PEND = []; }
-  if (!u.active) {
-    if (!room.classList.contains("hidden")) { room.classList.add("hidden"); UNV_PEND = []; unvKill(); }
-    return;
-  }
-  room.classList.remove("hidden");
-  $("unvExitBtn").classList.toggle("hidden", s.you !== s.host);
-  $("unvWait").classList.toggle("hidden", s.you === s.host);
-  for (const item of (u.queue || [])) {
-    if (item.id > UNV_LAST && !UNV_PEND.some(x => x.id === item.id)) UNV_PEND.push(item);
-  }
-  unvNext();
-}
-$("unvExitBtn").onclick = async () => {
-  try { await api("/api/unveilclear", {}); await tick(); } catch (e) { alert(e.message); }
-};
 $("nextSeasonBtn").onclick = async () => {
   $("nextSeasonBtn").disabled = true;
   try { await api("/api/nextseason",{}); await tick(); } catch(e){ alert(e.message); }
@@ -2220,13 +1956,18 @@ async function loadMarket() {
     const open = STATE && STATE.window ? STATE.window.open : true;
     $("marketBody").innerHTML = j.players.map(p => {
       const onLoan = !!p.loanOwner;
+      const myTeam = STATE && STATE.myClub ? STATE.myClub.name : "";
+      const canHijack = p.hijackPrice !== null && p.hijackPrice !== undefined && (p.deal || (p.nego && p.nego.club !== myTeam));
       let acts;
       if (!open) acts = '<span class="tag">Window shut</span>';
       else if (onLoan) acts = '<span class="tag loan">On loan</span>';
       else acts = `<button class="small" onclick="bid(${p.id}, ${p.asking}, ${p.humanOwned ? "true" : "false"})">Bid</button>` +
-        (p.humanOwned || p.rating > 85 ? "" : ` <button class="small ghost" onclick="loanIn(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Loan</button>`);
+        (p.humanOwned || p.rating > 85 ? "" : ` <button class="small ghost" onclick="loanIn(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Loan</button>`) +
+        (canHijack ? ` <button class="small red" onclick="hijack(${p.id}, ${p.hijackPrice}, '${p.name.replace(/'/g, "\\'")}')">Hijack ${money(p.hijackPrice)}</button>` : "");
+      const negoTag = p.deal ? `<span class="tag nego">AGREED \u2192 ${p.deal.club}</span>` :
+        (p.nego ? (p.nego.club === myTeam ? '<span class="tag nego">IN TALKS WITH YOU</span>' : `<span class="tag nego">IN TALKS: ${p.nego.club}</span>`) : "");
       return `
-      <tr><td>${p.name} ${p.humanOwned?'<span class="tag human">Human club</span>':''} ${p.listed?'<span class="tag listed">Listed</span>':''} ${onLoan?'<span class="tag loan">Loan</span>':''}</td>
+      <tr><td>${p.name} ${p.humanOwned?'<span class="tag human">Human club</span>':''} ${p.listed?'<span class="tag listed">Listed</span>':''} ${onLoan?'<span class="tag loan">Loan</span>':''} ${negoTag}</td>
       <td>${p.club}</td><td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
       <td class="num">${money(p.value)}</td><td class="num">${money(p.asking)}</td>
       <td style="white-space:nowrap">${acts}</td></tr>`;
@@ -2238,12 +1979,45 @@ async function loadMarket() {
       ${fa.map(p => `<tr><td>${p.name}</td><td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
       <td><button class="small" onclick="signFree(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Sign free</button></td></tr>`).join("")}
       </tbody></table>`;
-    if (!open) $("marketMsg").textContent = STATE.window.label + ". You can browse but not bid.";
+    $("marketMsg").textContent = "Negotiations left this week: " + (STATE && STATE.negosLeft !== undefined ? STATE.negosLeft : 2) + " of 2." + (!open ? " " + STATE.window.label + ". You can browse but not bid." : "");
   } catch(e){ $("marketMsg").textContent = e.message; }
 }
 window.signFree = async (id, name) => {
   if (!confirm("Sign " + name + " on a free? No fee, he joins straight away.")) return;
   try { await api("/api/signfree", { playerId: id }); await tick(); loadMarket(); } catch(e){ alert(e.message); }
+};
+let CT_ID = null;
+window.openTerms = (id) => {
+  const S = window.STATE || STATE;
+  const p = S && S.myClub ? S.myClub.squad.find(x => x.id === id) : null;
+  if (!p) return;
+  CT_ID = id;
+  $("ctName").textContent = p.name + ", " + p.age + ", rated " + p.rating;
+  $("ctCurrent").textContent = "Current deal: " + (p.contractYears || 0) + " year" + ((p.contractYears || 0) === 1 ? "" : "s") + " left, " + money(p.wage || 0) + " a season, " + (p.squadRole || "no role set") + ".";
+  $("ctWage").value = p.wage || "";
+  $("ctYears").value = "3";
+  $("ctRole").value = p.squadRole || "First team";
+  $("ctNote").textContent = "";
+  $("ctModal").classList.remove("hidden");
+};
+window.closeTerms = () => { $("ctModal").classList.add("hidden"); CT_ID = null; };
+$("ctSave").onclick = async () => {
+  if (CT_ID === null) return;
+  try {
+    const r = await api("/api/renegotiate", { playerId: CT_ID, wage: Number($("ctWage").value), years: Number($("ctYears").value), role: $("ctRole").value });
+    if (r.accepted) { closeTerms(); await tick(); }
+    else $("ctNote").textContent = r.note || "He said no. Sweeten it.";
+  } catch (e) { $("ctNote").textContent = e.message; }
+};
+window.sendTerms = async (offerId) => {
+  try {
+    await api("/api/terms", { offerId, wage: Number($("tw" + offerId).value), years: Number($("ty" + offerId).value), role: $("tr" + offerId).value });
+    await tick();
+  } catch (e) { alert(e.message); }
+};
+window.hijack = async (id, price, name) => {
+  if (!confirm("Hijack the " + name + " deal for " + money(price) + "? That is the gazumping price and it uses one of your two weekly negotiations.")) return;
+  try { const r = await api("/api/hijack", { playerId: id }); alert(r.offer && r.offer.note ? r.offer.note : "Hijack attempt in."); await tick(); loadMarket(); } catch (e) { alert(e.message); }
 };
 window.releasePlayer = async (id, name) => {
   if (!confirm("Terminate " + name + "'s contract? It costs 0.5m in compensation and he walks away a free agent for anyone to sign.")) return;
