@@ -1991,7 +1991,7 @@ async function loadMarket() {
       ${fa.map(p => `<tr><td>${p.name}</td><td class="pos-${p.pos}">${p.role || p.pos}</td><td class="num">${p.age}</td><td class="num">${p.rating}</td>
       <td><button class="small" onclick="signFree(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Sign free</button></td></tr>`).join("")}
       </tbody></table>`;
-    $("marketMsg").textContent = "Negotiations left this week: " + (STATE && STATE.negosLeft !== undefined ? STATE.negosLeft : 2) + " of 2." + (!open ? " " + STATE.window.label + ". You can browse but not bid." : "");
+    $("marketMsg").textContent = "Signings left this week: " + (STATE && STATE.signingsLeft !== undefined ? STATE.signingsLeft : 1) + " of 1. Talk to as many players as you like, only one deal can cross the line per week." + (!open ? " " + STATE.window.label + ". You can browse but not bid." : "");
   } catch(e){ $("marketMsg").textContent = e.message; }
 }
 window.signFree = async (id, name) => {
@@ -2028,7 +2028,7 @@ window.sendTerms = async (offerId) => {
   } catch (e) { alert(e.message); }
 };
 window.hijack = async (id, price, name) => {
-  if (!confirm("Hijack the " + name + " deal for " + money(price) + "? That is the gazumping price and it uses one of your two weekly negotiations.")) return;
+  if (!confirm("Hijack the " + name + " deal for " + money(price) + "? That is the gazumping price. If he signs, he counts as your one signing this week.")) return;
   try { const r = await api("/api/hijack", { playerId: id }); alert(r.offer && r.offer.note ? r.offer.note : "Hijack attempt in."); await tick(); loadMarket(); } catch (e) { alert(e.message); }
 };
 window.releasePlayer = async (id, name) => {

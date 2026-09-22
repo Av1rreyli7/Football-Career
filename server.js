@@ -414,6 +414,13 @@ function termsAccepted(demands, wage, years, role) {
     (ROLE_RANK[role] >= ROLE_RANK[demands.wantRole] - 1 && wage >= demands.wantWage * 1.3);
   return roleOk && wage >= demands.wantWage - 0.05;
 }
+function signedThisWeek(game, user) {
+  return !!(user.signings && user.signings.week === game.round && user.signings.count >= 1);
+}
+function markSigning(game, user) {
+  user.signings = { week: game.round, count: 1 };
+}
+
 function enterTerms(game, offer, p) {
   offer.status = "terms";
   offer.terms = { tries: 0, ...signingDemands(p) };
@@ -1985,9 +1992,6 @@ app.post("/api/offer", (req, res) => {
   if (!(fee > 0)) return res.status(400).json({ error: "Enter a fee." });
   if (fee > game.clubs[user.team].budget) return res.status(400).json({ error: "That bid is over your budget." });
   if (game.clubs[p.club].squad.length <= 12) return res.status(400).json({ error: `${p.club} refuse to sell. Their squad is too thin.` });
-  if (!user.negos || user.negos.week !== game.round) user.negos = { week: game.round, count: 0 };
-  if (user.negos.count >= 2) return res.status(400).json({ error: "You have used both of your negotiations this week. Move fast next matchweek, the count resets then." });
-  user.negos.count++;
   const offer = {
     id: game.offerSeq++, playerId: p.id, toClub: user.team, sellerClub: p.club,
     fee, week: game.round, direction: "outbound", buyerUser: user.name
@@ -2030,9 +2034,6 @@ app.post("/api/hijack", (req, res) => {
   const club = game.clubs[user.team];
   if (price > club.budget) return res.status(400).json({ error: `Hijacking this deal costs £${price}m and that is over your budget.` });
   if (club.squad.length >= 30) return res.status(400).json({ error: "Squad is full (30 max). Sell someone first." });
-  if (!user.negos || user.negos.week !== game.round) user.negos = { week: game.round, count: 0 };
-  if (user.negos.count >= 2) return res.status(400).json({ error: "You have used both of your negotiations this week. Move fast next matchweek, the count resets then." });
-  user.negos.count++;
   const jilted = p.pendingDeal ? p.pendingDeal.toClub : (activeRivalOffers(game, p.id, user.team)[0] || {}).toClub;
   const offer = {
     id: game.offerSeq++, playerId: p.id, toClub: user.team, sellerClub: p.club,
@@ -2043,6 +2044,7 @@ app.post("/api/hijack", (req, res) => {
     offer.status = "pending_seller";
     log(game, `${user.team} are trying to hijack the ${p.name} deal with a £${price}m bid to ${p.club}.`);
   } else if (p.pendingDeal) {
+    if (signedThisWeek(game, user)) return res.status(400).json({ error: "You already completed a signing this week. Hijacking an agreed deal registers him today, so come back after the matchweek." });
     delete p.pendingDeal;
     if (p.rating >= 85 && p.age > 22 && !BIG_CLUBS.includes(user.team) && Math.random() < 0.45) {
       offer.status = "player_declined";
@@ -2050,6 +2052,7 @@ app.post("/api/hijack", (req, res) => {
       romano(game, `❌ Twist: ${p.name} has rejected the hijack from ${user.team}. And the ${jilted} deal is off as well. Everyone loses.`);
     } else {
       const r = doTransfer(game, offer);
+      if (r.ok) markSigning(game, user);
       offer.status = r.ok ? "accepted" : "failed";
       offer.note = r.ok ? `Hijack complete. You stole him from under ${jilted} for £${price}m.` : r.msg;
       if (r.ok) romano(game, `💥✅ HIJACKED and DONE: ${p.name} joins ${user.team}, not ${jilted}. £${price}m. One of the great window betrayals.`);
@@ -2073,6 +2076,7 @@ app.post("/api/terms", (req, res) => {
   if (!offer) return res.status(404).json({ error: "Offer not found." });
   if (offer.status !== "terms") return res.status(400).json({ error: "Personal terms are not on the table for this offer." });
   if (offer.buyerUser !== user.name) return res.status(403).json({ error: "This is not your negotiation." });
+  if (signedThisWeek(game, user)) return res.status(400).json({ error: "You already completed a signing this week. One signing per week. His camp will wait, finish this one after the matchweek." });
   const p = game.players[offer.playerId];
   if (!p || p.club !== offer.sellerClub) { offer.status = "void"; offer.note = "The player already left that club."; save(); return res.json({ ok: true, offer }); }
   const wage = Math.round(Number(req.body.wage) * 10) / 10;
@@ -2081,6 +2085,7 @@ app.post("/api/terms", (req, res) => {
   if (termsAccepted(offer.terms, wage, years, role)) {
     const r = doTransfer(game, offer);
     if (r.ok) {
+      markSigning(game, user);
       p.wage = wage;
       p.contractYears = years;
       p.squadRole = role;
@@ -2521,7 +2526,7 @@ app.get("/api/state", (req, res) => {
   for (const league of Object.keys(game.leagueFixtures || {})) tables[league] = tableFor(game, league);
   res.json({
     code: game.code,
-    negosLeft: (user.negos && user.negos.week === game.round) ? Math.max(0, 2 - user.negos.count) : 2,
+    signingsLeft: signedThisWeek(game, user) ? 0 : 1,
     you: user.name,
     host: game.host,
     started: game.started,
