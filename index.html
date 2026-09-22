@@ -1172,12 +1172,7 @@ function render() {
   renderRomano(s);
 
   // offers
-  const mine = s.offers.filter(o => o.buyerUser === s.you);
-  const incoming = s.offers.filter(o => o.sellerClub === (s.myClub||{}).name && o.buyerUser !== s.you);
-  $("offersOut").innerHTML = mine.map(o => offerCard(o, "buyer")).join("") || "<p style='color:var(--dim)'>No bids yet. Hit the market.</p>";
-  $("offersIn").innerHTML = incoming.map(o => offerCard(o, "seller")).join("") || "<p style='color:var(--dim)'>Nothing incoming.</p>";
-  const hot = incoming.filter(o=>o.status==="pending_seller").length + mine.filter(o=>o.status==="countered").length;
-  $("offerDot").textContent = hot ? "("+hot+")" : "";
+  renderOffers(s);
 
   // matches
   const seasonDone = !!s.seasonOver;
@@ -1290,6 +1285,23 @@ let MANAGERS = {};
 function fixtureRow(m, s) {
   const nm = t => { const b = MANAGERS[t]; return (b && b !== "AI") ? ` <span class="tag human">${b}</span>` : ""; };
   return `<div class="fixture"><span class="fh">${m.home}${nm(m.home)}</span><span class="score">${m.hg===null?"v":m.hg+"-"+m.ag}${m.derby?' <span class="tag derby">DERBY</span>':''}</span><span class="fa">${m.away}${nm(m.away)}</span></div>`;
+}
+
+function renderOffers(s) {
+  const mine = s.offers.filter(o => o.buyerUser === s.you);
+  const incoming = s.offers.filter(o => o.sellerClub === (s.myClub||{}).name && o.buyerUser !== s.you);
+  // do not wipe the personal terms form while someone is typing in it
+  const act = document.activeElement;
+  const typingTerms = act && /^(tw|ty|tr)\d+$/.test(act.id || "");
+  if (!typingTerms) {
+    const saved = {};
+    document.querySelectorAll('#offersOut input[id^="tw"], #offersOut select[id^="ty"], #offersOut select[id^="tr"]').forEach(el => saved[el.id] = el.value);
+    $("offersOut").innerHTML = mine.map(o => offerCard(o, "buyer")).join("") || "<p style='color:var(--dim)'>No bids yet. Hit the market.</p>";
+    $("offersIn").innerHTML = incoming.map(o => offerCard(o, "seller")).join("") || "<p style='color:var(--dim)'>Nothing incoming.</p>";
+    Object.entries(saved).forEach(([id, v]) => { const el = $(id); if (el && v !== "") el.value = v; });
+  }
+  const hot = incoming.filter(o=>o.status==="pending_seller").length + mine.filter(o=>o.status==="countered").length;
+  $("offerDot").textContent = hot ? "("+hot+")" : "";
 }
 
 function offerCard(o, role) {
